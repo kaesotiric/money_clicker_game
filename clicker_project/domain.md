@@ -1,3 +1,8 @@
+---
+title: Domain Model for my Money Clicker!
+author: Kate Nabo (nabok@myumanitoba.ca)
+date: Winter 2026
+---
 # Domain Model
 
 ```mermaid
