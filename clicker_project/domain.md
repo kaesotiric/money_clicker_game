@@ -11,43 +11,59 @@ classDiagram
 
 class Player {
     - String name
-    - double clickPerSec(CPS)
+    - double currClick
     - double clickBuyPower
-    + increaseCPS(amount) void
-    + spendBuyPower(Store) void
+    - List~Upgrade~ upgrades
+    + click() void
+    + calculateCurrClick(upgrades) double
+    + purchaseUpgrade(Upgrade) void
+    + updateCurrClick(amount) void
     }
     
     note for Player "Class Invariants:
     <ul>
     <li>name!=null</li>
-    <li>clickPerSec>=1</li>
+    <li>currClick>=1</li>
     <li>clickBuyPower>=0</li>
+    <li>upgrades!=null</li>
+    <li>for each item in upgrades != null</li>
     </ul>"
 
      class Upgrade {
          <<abstract>>
+         - String name
          - int level
+         - double production
          - double buyPowerCost
          + increaseLevel() void
+         + calculateProduction(level)* double
+         + calculateCost(level)* double
+
      }
     note for Upgrade "Class Invariants:
     <ul>
+    <li>name!=null</li>
     <li>level>=0</li>
+    <li>production>0</li>
     <li>buyPowerCost>0</li>
-    <li>Player!=null</li>
     </ul>"
     
-     note for Banker "Banker will extend/inherit from the Store class"
+     note for FinancialAdvisor  "will extend/inherit from the Upgrade class and overrides all abstract methods"
      
-     class Banker {
+     class FinancialAdvisor {
+         + calculateProduction(level) double
+         + calculateCost(level) double
+         
      }
      
-     note for Employer "Employer will extend/inherit from the Store class"
+     note for Employer "will extend/inherit from the Upgrade class and overrides all abstract methods"
      class Employer {
+        + calculateProduction(level) double
+        + calculateCost(level) double
+        
      }
-     
     Player --* Upgrade
-    Upgrade <|-- Banker
+    Upgrade <|-- FinancialAdvisor
     Upgrade <|-- Employer
     
 ```

@@ -1,5 +1,5 @@
 ---
-title: Domain Model for my Money Clicker!
+title: Flows of interaction for my Money Clicker!
 author: Kate Nabo (nabok@myumanitoba.ca)
 date: Winter 2026
 ---
@@ -9,7 +9,7 @@ date: Winter 2026
 ```mermaid
 flowchart TD
     subgraph CLICKER FLOW CHART
-        display[[Displays Clickable Item]]
+        display[/Displays Clickable Item/]
         calculate[[Calculates buy power gain based on upgrades]]
         updatedBP[Display updated buy power]
         display-result{PLayer clicked clickable item?}
@@ -23,7 +23,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     subgraph UPGRADE FLOW CHART
-        display[[Displays store upgrades]]
+        display[/Displays store upgrades/]
         purchase[[Process upgrade]]
         errorDisplay[Display not enough buy power]
         upgraded[Display successfully purchased upgrade]
