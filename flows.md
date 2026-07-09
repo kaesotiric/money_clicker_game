@@ -1,0 +1,48 @@
+---
+title: Flows of interaction for my Player Clicker!
+author: Kate Nabo (nabok@myumanitoba.ca)
+date: Winter 2026
+---
+
+# Flows of interaction
+
+```mermaid
+flowchart TD
+    subgraph CLICKER FLOW CHART
+        display[/Displays Clickable Item/]
+        clickItem([User clicks clickable item])
+        calculate[Calculates buy power gain based on upgrades]
+        updatedBP[/Display updated buy power/]
+        display-result{Checks current upgrades}
+        noUpgrade[Calculates clickpower with no upgrades]
+        display===> clickItem
+        clickItem ==input: item clicked===> display-result
+        display-result -.Player has at least one upgrade.-> calculate
+        display-result -.No upgrades.-> noUpgrade
+        calculate==new buy power with upgrade===>updatedBP
+        noUpgrade==new buy power with no upgrade ===>updatedBP
+        
+        end
+
+```
+## Upgrade Flow Chart
+```mermaid
+flowchart TD
+    subgraph UPGRADE FLOW CHART
+        display[/Displays store upgrades and current buy power/]
+        selectUpgrade([User selects upgrade])
+        errorDisplay[/Display not enough buy power/]
+        continueGame[[Continue Game]]
+        display-result{Check if sufficient buypower to purchase upgrade}
+        purchase[Apply upgrade in click power]
+        upgraded[/Display Upgrade Successful/]
+        display===> selectUpgrade
+        selectUpgrade == input: upgrade clicked/selected ===> display-result
+        display-result -. upgrade purchased successfully .-> purchase
+        display-result -. not enough buy power .-> errorDisplay
+        errorDisplay== return to game ===>continueGame
+        purchase== upgraded ===>upgraded
+        upgraded== return to game ===>continueGame
+    end
+```
+
