@@ -1,5 +1,5 @@
 ---
-title: Money Clicker
+title: Player Clicker
 author: Kate Nabo (nabok@myumanitoba.ca)
 date: Winter 2026
 ---
@@ -14,6 +14,7 @@ This project is a Node.js project using Vite. You can run it on the command
 line using `npx`:
 
 ```bash
+npm install
 npx vite
 ```
 

@@ -1,28 +1,7 @@
-class Player{
+import Money from "./controller/trainer-controller.ts";
 
-    //change later
-    #name: string;
-    #buyPower : number
-    #currClick : number
-    constructor(name: string, clickPower: number, buyPower: number){
-        this.#name = name;
-        this.#currClick = clickPower;
-        this.#buyPower = buyPower;
+let trainerController = new TrainerController();
 
-    }
+document.querySelector("#add-pokemon")!.addEventListener("click", () => trainerController.addToTeam());
 
-    get name(){
-        return this.#name;
-    }
-    get buyPower(){
-        return this.#buyPower;
-    }
-
-
-    increaseCPS(by: number) : void {
-        if(by>=0){
-            this.#currClick+=by;
-        }
-    }
-}
-
+console.log(trainerController);

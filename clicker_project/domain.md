@@ -1,5 +1,5 @@
 ---
-title: Domain Model for my Money Clicker!
+title: Domain Model for my Player Clicker!
 author: Kate Nabo (nabok@myumanitoba.ca)
 date: Winter 2026
 ---
