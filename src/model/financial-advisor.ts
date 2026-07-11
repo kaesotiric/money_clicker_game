@@ -3,7 +3,7 @@ import {Upgrade} from "./upgrade.ts";
 
 export class FinancialAdvisor extends Upgrade {
     constructor(){
-        super("Financial Advisor", 1, 20, 1000)
+        super("Financial Advisor", 0, 20, 10)
     }
 
     calculateCost(level:number):number{

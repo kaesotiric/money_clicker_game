@@ -5,12 +5,47 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>clicker_project</title>
+
+
 </head>
 <body>
 <div id="app"></div>
+<h1>Money Clicker</h1>
 <p>Buy Power: <span id="buyPower">0</span></p>
-<button id="money-button" >CLICK ME</button>
-<button id="purchase-upgrade" >PURCHASE UPGRADE</button>
+<button id="money-button">CLICK ME</button>
+
+    <section class="shop">
+        <h2>Shop</h2>
+        <div class="upgrade-row">
+            <button id="purchase-advisor">Purchase Financial Advisor</button>
+            <span>Level: <span id="advisor-level">0</span></span>
+            <span>Price: <span id="advisor-price">0</span></span>
+
+        </div>
+        <div class="upgrade-row">
+        <button id="purchase-employer">Purchase Employer</button>
+        <span>Level: <span id="employer-level">0</span></span>
+        <span>Price: <span id="employer-price">0</span></span>
+        </div>
+    </section>
+
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
+
+<!--<!doctype html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8" />-->
+<!--    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0" />-->
+<!--    <title>clicker_project</title>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div id="app"></div>-->
+<!--<p>Buy Power: <span id="buyPower">0</span></p>-->
+<!--<button id="money-button" >CLICK ME</button>-->
+<!--<button id="purchase-upgrade" >PURCHASE UPGRADE</button>-->
+<!--<script type="module" src="/src/main.ts"></script>-->
+<!--</body>-->
+<!--</html>-->

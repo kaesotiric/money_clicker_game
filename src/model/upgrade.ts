@@ -1,4 +1,3 @@
-import { assert } from '../assertions.ts'
 
 export abstract class Upgrade {
     #name: string;

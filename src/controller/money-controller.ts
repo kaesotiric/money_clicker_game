@@ -3,20 +3,21 @@ import MoneyView from "../view/money-view.ts";
 
 export default class MoneyController {
 
-    private player: Player;
-    private view: MoneyView;
+    #player: Player;
+    #view: MoneyView;
 
     constructor(player: Player, view: MoneyView) {
-        this.player = player;
-        this.view = view;
+        this.#player = player;
+        this.#view = view;
 
-        this.view.moneyButton.addEventListener(
+        this.#view.moneyButton.addEventListener(
             "click",
             this.handleClick.bind(this)
         );
     }
 
     private handleClick(): void {
-        this.player.click();
+        this.#player.click();
     }
+
 }

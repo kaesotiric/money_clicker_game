@@ -1,84 +1,21 @@
 import assert from "../assertions.ts";
 import type Listener from "./listener.ts";
-// import type Upgrade from "./upgrade.ts";
-
-// export default class Player {
-//
-//     //change later
-//     #name: string;
-//     #buyPower : number
-//     #currClick : number
-//     #upgrades: Array<Upgrade>;
-//     #listeners: Array<Listener>;
-//     constructor(name: string, clickPower: number, buyPower: number){
-//         this.#name = name;
-//         this.#currClick = clickPower;
-//         this.#buyPower = buyPower;
-//         this.#upgrades = new Array<Upgrade>;
-//         this.#listeners = new Array<Listener>();
-//         this.#checkMoney();
-//     }
-//
-//     get name(){
-//         return this.#name;
-//     }
-//     get getBuyPower(){
-//         return this.#buyPower;
-//     }
-//
-//     increaseCPS(by: number) : void {
-//         this.#checkClick();
-//         this.#currClick+=by;
-//         this.#notifyAll();
-//     }
-//     click():void{
-//         this.#buyPower+=this.#currClick; // When a user clicks, it will increase buy power by currentClick
-//     }
-//
-//     purchaseUpgrade(upgrade: Upgrade): void{
-//         this.#checkMoney();
-//         if(this.#buyPower >= upgrade.getBuyPowerCost()){
-//             this.#buyPower -= upgrade.getBuyPowerCost();
-//             this.increaseCPS(upgrade.getProduction());
-//             this.#upgrades.push(upgrade);
-//         }
-//         this.#checkClick();
-//     }
-//
-//
-//     #checkMoney(){
-//         assert(this.#buyPower >=0, "buyPower can't be negative")
-//     }
-//     #checkClick(){
-//         assert(this.#currClick >=0, "currentClick can't be negative")
-//     }
-//     registerListener(listener: Listener){
-//         this.#listeners.push(listener);
-//     }
-//
-//     #notifyAll(){
-//         this.#listeners.forEach((l) => l.notify());
-//     }
-//     private notifyListeners(): void {
-//         for (const listener of this.listeners) {
-//             listener.playerChanged();
-//         }
-//     }
-// }
-
+import type {Upgrade} from "./upgrade.ts";
+import {Employer} from "./employer.ts";
+import {FinancialAdvisor} from "./financial-advisor.ts";
 
 export default class Player {
     #name: string;
     #buyPower: number;
     #currClick: number;
-    // #upgrades: Array<Upgrade>;
+    #upgrades: Array<Upgrade>;
     #listeners: Array<Listener>;
 
     constructor(name: string, clickPower: number, buyPower: number) {
         this.#name = name;
         this.#currClick = clickPower;
         this.#buyPower = buyPower;
-        // this.#upgrades = new Array<Upgrade>();
+        this.#upgrades = new Array<Upgrade>();
         this.#listeners = new Array<Listener>();
         this.#checkMoney();
         this.#checkClick();
@@ -95,6 +32,15 @@ export default class Player {
     get currClick(): number {
         return this.#currClick;
     }
+    getAdvisorLevel(){
+        for(let i = 0; i<this.#upgrades.length; i++) {
+            if (this.#upgrades[i].getName() === ("Financial Advisor")){
+                return this.#upgrades[i].getLevel();
+            }else{
+                return 0;
+            }
+        }
+    }
 
     increaseCPS(by: number): void {
         this.#currClick += by;
@@ -109,19 +55,39 @@ export default class Player {
         this.#notifyAll();
     }
 
-    // purchaseUpgrade(upgrade: Upgrade): void {
-    //     this.#checkMoney();
-    //
-    //     if (this.#buyPower >= upgrade.getBuyPowerCost()) {
-    //         this.#buyPower -= upgrade.getBuyPowerCost();
-    //         this.increaseCPS(upgrade.getProduction());
-    //         this.#upgrades.push(upgrade);
-    //         this.#notifyAll();
-    //     }
-    //
-    //     this.#checkMoney();
-    //     this.#checkClick();
-    // }
+    purchaseUpgrade(upgrade: Upgrade): void {
+        this.#checkMoney();
+
+        if (this.#buyPower >= upgrade.getBuyPowerCost()) {
+            this.#buyPower -= upgrade.getBuyPowerCost();
+            this.increaseCPS(upgrade.getProduction());
+            upgrade.increaseLevel();
+            this.#notifyAll();
+        }
+
+        this.#checkMoney();
+        this.#checkClick();
+    }
+    fillArray(){
+        let employer = new Employer();
+        let advisor = new FinancialAdvisor();
+        this.#upgrades.push(employer);
+        this.#upgrades.push(advisor);
+
+    }
+
+    purchaseAdvisor():void{
+        if(this.#upgrades.length >=1){
+           for(let i = 0; i<this.#upgrades.length; i++) {
+               if (this.#upgrades[i].getName() === ("Financial Advisor")
+                   && this.#upgrades[i].getLevel() >= (0)) {
+                   this.purchaseUpgrade(this.#upgrades[i]); // this will check first if player has enough money
+                   this.#upgrades[i].increaseLevel(); // Then increaseLevel
+               }
+           }
+
+        }
+    }
 
     registerListener(listener: Listener): void {
         this.#listeners.push(listener);
