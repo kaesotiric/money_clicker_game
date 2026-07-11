@@ -15,7 +15,7 @@ export default class UpgradeController{
     }
 
     private handleAdvisorClick(){
-         this.#player.purchaseAdvisor()
+         this.#player.purchaseAdvisor();
          // this.#player.purchaseUpgrade();
     }
 

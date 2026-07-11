@@ -3,7 +3,7 @@ import {Upgrade} from "./upgrade.ts";
 
 export class FinancialAdvisor extends Upgrade {
     constructor(){
-        super("Financial Advisor", 0, 20, 10)
+        super("Financial Advisor", 0, 15, 20)
     }
 
     calculateCost(level:number):number{
@@ -12,4 +12,5 @@ export class FinancialAdvisor extends Upgrade {
     calculateProduction(level:number):number{
         return (level*1.5)*this.getProduction(); // Each upgrade will add additional n clicks per click on item
     }
+
 }

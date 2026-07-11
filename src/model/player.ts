@@ -17,6 +17,7 @@ export default class Player {
         this.#buyPower = buyPower;
         this.#upgrades = new Array<Upgrade>();
         this.#listeners = new Array<Listener>();
+        this.#notifyAll();
         this.#checkMoney();
         this.#checkClick();
     }
@@ -32,14 +33,22 @@ export default class Player {
     get currClick(): number {
         return this.#currClick;
     }
-    getAdvisorLevel(){
+    getAdvisorLevel(): number{
         for(let i = 0; i<this.#upgrades.length; i++) {
             if (this.#upgrades[i].getName() === ("Financial Advisor")){
                 return this.#upgrades[i].getLevel();
-            }else{
-                return 0;
             }
         }
+        return 0;
+    }
+
+    getPrice():number{
+        for(let i = 0; i<this.#upgrades.length; i++) {
+            if (this.#upgrades[i].getName() === ("Financial Advisor")){
+                return this.#upgrades[i].getBuyPowerCost();
+            }
+        }
+        return 0;
     }
 
     increaseCPS(by: number): void {
@@ -49,30 +58,42 @@ export default class Player {
     }
 
     click(): void {
-        this.#buyPower += 1;
+        this.#buyPower += this.currClick;
         console.log("buyPower is now", this.#buyPower);
         this.#checkMoney();
         this.#notifyAll();
     }
 
     purchaseUpgrade(upgrade: Upgrade): void {
-        this.#checkMoney();
 
-        if (this.#buyPower >= upgrade.getBuyPowerCost()) {
-            this.#buyPower -= upgrade.getBuyPowerCost();
-            this.increaseCPS(upgrade.getProduction());
-            upgrade.increaseLevel();
-            this.#notifyAll();
+        console.log("buyPowerCOST is now", upgrade.getBuyPowerCost());
+        // upgrade.setBuyPowerCost();
+        const cost = upgrade.getBuyPowerCost();
+
+        if (this.#buyPower < cost) {
+            return;
         }
+
+        this.#buyPower -= cost;
+        upgrade.increaseLevel();
+        upgrade.setBuyPowerCost();
+
+        // Update the exact upgrade that was clicked
+
+        this.#currClick += upgrade.getProduction();
 
         this.#checkMoney();
         this.#checkClick();
+        this.#notifyAll();
     }
+
+
     fillArray(){
-        let employer = new Employer();
         let advisor = new FinancialAdvisor();
-        this.#upgrades.push(employer);
+        // let employer = new Employer();
         this.#upgrades.push(advisor);
+        // this.#upgrades.push(employer);
+        this.#notifyAll();
 
     }
 
@@ -82,7 +103,6 @@ export default class Player {
                if (this.#upgrades[i].getName() === ("Financial Advisor")
                    && this.#upgrades[i].getLevel() >= (0)) {
                    this.purchaseUpgrade(this.#upgrades[i]); // this will check first if player has enough money
-                   this.#upgrades[i].increaseLevel(); // Then increaseLevel
                }
            }
 

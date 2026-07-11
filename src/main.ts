@@ -8,7 +8,6 @@ let player = new Player("Kate", 1, 0);
 player.fillArray();
 
 let moneyView = new MoneyView(player);
-new MoneyController(player, moneyView);
-
 let upgradeView = new UpgradeView(player);
+new MoneyController(player, moneyView);
 new UpgradeController(player, upgradeView);

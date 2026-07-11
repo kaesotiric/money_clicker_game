@@ -1,21 +1,31 @@
+import type Listener from "./listener.ts";
 
 export abstract class Upgrade {
     #name: string;
     #level: number;
     #production: number;
     #buyPowerCost: number;
+    #listeners: any;
 
     constructor(name:string, level:number, production:number, buyPowerCost:number){
         this.#name = name;
         this.#level = level;
         this.#production = production;
         this.#buyPowerCost = buyPowerCost;
+        this.#listeners = new Array<Listener>();
     }
         increaseLevel(): void {
-            this.#level++;
+            this.#level += 1;
+            // this.#notifyAll();
         }
         abstract calculateProduction(level:number):number;
         abstract calculateCost(level:number):number;
+
+        setBuyPowerCost(){
+            this.#buyPowerCost = this.calculateCost(this.#level);
+            this.#notifyAll();
+
+        }
 
     // Getters
     getName(): string {
@@ -32,6 +42,13 @@ export abstract class Upgrade {
 
     getBuyPowerCost(): number {
         return this.#buyPowerCost;
+    }
+    registerListener(listener: Listener): void {
+        this.#listeners.push(listener);
+    }
+
+    #notifyAll(): void {
+        this.#listeners.forEach((listener) => listener.notify());
     }
 
 }
