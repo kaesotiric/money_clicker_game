@@ -1,12 +1,16 @@
 ---
 title: Player Clicker
 author: Kate Nabo (nabok@myumanitoba.ca)
-date: Winter 2026
+date: Summer 2026
 ---
 
 # Overview
 A money clicker game inspired by a cookie clicker. Clicking on the clickable money image 
 will increase the amount of the money produced based on additional upgrades that is displayed on the screen. 
+
+## Changes
+- Corrected the flowchart, start/endtask are both double rectangles. All subtasks are single rectangles. 
+- Calculation step is now the same step as the processing to KISS
 
 # Running
 
