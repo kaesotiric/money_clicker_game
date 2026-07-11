@@ -9,18 +9,13 @@ date: Winter 2026
 ```mermaid
 flowchart TD
     subgraph CLICKER FLOW CHART
-        display[[Displays Clickable Item and current buypower]]
+        display[[Displays Clickable Item]]
         clickItem([User clicks clickable item])
-%%        calculate[Calculates buy power gain based on upgrades]
         updatedBP[[Display updated buy power and return to game]]
         display-result{Process clickpower based on current upgrades}
-%%        noUpgrade[Calculates clickpower with no upgrades]
         display===> clickItem
         clickItem ==input: item clicked===> display-result
-%%        display-result -.Player has at least one upgrade.-> calculate
-%%        display-result -.No upgrades.-> noUpgrade
         display-result==new buy power===>updatedBP
-%%        noUpgrade==new buy power with no upgrade ===>updatedBP
         
         end
 
@@ -34,14 +29,12 @@ flowchart TD
         errorDisplay[Display not enough buy power]
         continueGame[[Continue Game]]
         display-result{Check if sufficient buypower to process upgrade}
-%%        purchase[Apply upgrade in click power]
         upgraded[Display Upgrade Successful]
         display===> selectUpgrade
         selectUpgrade == input: upgrade clicked/selected ===> display-result
         display-result -. upgrade purchased successfully .-> upgraded
         display-result -. not enough buy power .-> errorDisplay
         errorDisplay== return to game ===>continueGame
-%%        purchase== upgraded ===>upgraded
         upgraded== return to game ===>continueGame
     end
 ```
