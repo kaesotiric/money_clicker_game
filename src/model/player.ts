@@ -33,18 +33,22 @@ export default class Player {
     get currClick(): number {
         return this.#currClick;
     }
-    getAdvisorLevel(): number{
+    getAdvisorLevel(name: string): number{
         for(let i = 0; i<this.#upgrades.length; i++) {
-            if (this.#upgrades[i].getName() === ("Financial Advisor")){
+            if (this.#upgrades[i].getName() === ("Financial Advisor") && name === "Financial Advisor"){
+                return this.#upgrades[i].getLevel();
+            }else if(this.#upgrades[i].getName() === ("Employer") && name === "Employer"){
                 return this.#upgrades[i].getLevel();
             }
         }
         return 0;
     }
-
-    getPrice():number{
+    //Change Later
+    getPrice(type:string):number{ //**make more dynamic
         for(let i = 0; i<this.#upgrades.length; i++) {
-            if (this.#upgrades[i].getName() === ("Financial Advisor")){
+            if (this.#upgrades[i].getName() === ("Financial Advisor") && type === "Financial Advisor"){
+                return this.#upgrades[i].getBuyPowerCost();
+            }else if (this.#upgrades[i].getName() === ("Employer") && type === "Employer"){
                 return this.#upgrades[i].getBuyPowerCost();
             }
         }
@@ -64,7 +68,7 @@ export default class Player {
         this.#notifyAll();
     }
 
-    purchaseUpgrade(upgrade: Upgrade): void {
+    purchaseUpgrade(upgrade: Upgrade): void { ///**PROLLY WANT TO MAKE THIS A GENERAL METHOD IE PURCHASE USING STRING NAME
 
         console.log("buyPowerCOST is now", upgrade.getBuyPowerCost());
         // upgrade.setBuyPowerCost();
@@ -89,19 +93,22 @@ export default class Player {
 
 
     fillArray(){
-        let advisor = new FinancialAdvisor();
+        // let advisor = new FinancialAdvisor();
         // let employer = new Employer();
-        this.#upgrades.push(advisor);
-        // this.#upgrades.push(employer);
+        this.#upgrades.push(new FinancialAdvisor());
+        this.#upgrades.push(new Employer());
         this.#notifyAll();
 
     }
 
-    purchaseAdvisor():void{
+    purchaseByName(upgradeName : string):void{
         if(this.#upgrades.length >=1){
            for(let i = 0; i<this.#upgrades.length; i++) {
                if (this.#upgrades[i].getName() === ("Financial Advisor")
-                   && this.#upgrades[i].getLevel() >= (0)) {
+                   && upgradeName === "Financial Advisor") {
+                   this.purchaseUpgrade(this.#upgrades[i]); // this will check first if player has enough money
+               }else if (this.#upgrades[i].getName() === ("Employer")
+                   && upgradeName === "Employer"){
                    this.purchaseUpgrade(this.#upgrades[i]); // this will check first if player has enough money
                }
            }

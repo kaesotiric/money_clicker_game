@@ -17,6 +17,9 @@ export default class UpgradeView implements Listener{
     private employerLevelDsiplay =
     document.getElementById("employer-level") as HTMLElement;
 
+    private employerPriceDisplay =
+        document.getElementById("employer-price") as HTMLElement;
+
     constructor(player: Player){
         this.#player = player;
         this.#player.registerListener(this);
@@ -30,14 +33,24 @@ export default class UpgradeView implements Listener{
     }
 
     private updateLevel(): any {
-        const level = this.#player.getAdvisorLevel();
+        let level = this.#player.getAdvisorLevel("Financial Advisor");
         this.advisorLevelDisplay.textContent = level.toString();
+        this.updatePrice();
+        let employerLevel = this.#player.getAdvisorLevel("Employer");
+        this.employerLevelDsiplay.textContent = employerLevel.toString();
         this.updatePrice();
 
     }
     private updatePrice(): any {
-        const price = this.#player.getPrice();
+        let price = this.#player.getPrice("Financial Advisor");
+        let employerPrice = this.#player.getPrice("Employer");
         this.advisorPriceDisplay.textContent = price.toString();
+        this.employerPriceDisplay.textContent = employerPrice.toString();
+
     }
+
+
+
+
 
 }
