@@ -5,7 +5,7 @@ export abstract class Upgrade {
     #level: number;
     #production: number;
     #buyPowerCost: number;
-    #listeners: any;
+    #listeners: Array<Listener>;
 
     constructor(name:string, level:number, production:number, buyPowerCost:number){
         this.#name = name;

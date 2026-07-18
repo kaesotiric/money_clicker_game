@@ -5,16 +5,16 @@ import {Employer} from "./employer.ts";
 import {FinancialAdvisor} from "./financial-advisor.ts";
 
 export default class Player {
-    #name: string;
+    // #name: string;
     #buyPower: number;
     #currClick: number;
     #upgrades: Array<Upgrade>;
     #listeners: Array<Listener>;
 
-    constructor(name: string, clickPower: number, buyPower: number) {
-        this.#name = name;
-        this.#currClick = clickPower;
-        this.#buyPower = buyPower;
+    constructor() {
+        // this.#name = name;
+        this.#currClick = 1;
+        this.#buyPower = 0;
         this.#upgrades = new Array<Upgrade>();
         this.#listeners = new Array<Listener>();
         this.#notifyAll();
@@ -22,9 +22,9 @@ export default class Player {
         this.#checkClick();
     }
 
-    get name(): string {
-        return this.#name;
-    }
+    // get name(): string {
+    //     return this.#name;
+    // }
 
     get buyPower(): number {
         return this.#buyPower;

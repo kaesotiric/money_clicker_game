@@ -1,23 +1,39 @@
 import Player from "../model/player.ts";
 import MoneyView from "../view/money-view.ts";
+import CreateUpgradeView from "../view/create-upgrade-view.ts";
 
 export default class MoneyController {
 
     #player: Player;
     #view: MoneyView;
+    #createUpgradeView?: CreateUpgradeView;
 
-    constructor(player: Player, view: MoneyView) {
-        this.#player = player;
-        this.#view = view;
+    constructor() {
+        this.#player = new Player();
+        this.#player.fillArray()
 
-        this.#view.moneyButton.addEventListener(
-            "click",
-            this.handleClick.bind(this)
-        );
+        this.#view = new MoneyView(this.#player, this);
+
+        this.#player.fillArray();
     }
 
-    private handleClick(): void {
+    handleClick(): void {
         this.#player.click();
     }
+
+    showCreateUpgradeView(): void {
+
+        // Create the dialog the first time
+        if (!this.#createUpgradeView) {
+            this.#createUpgradeView = new CreateUpgradeView(this.#player, this);
+        }
+
+        // Show the dialog
+        this.#createUpgradeView.show();
+    }
+    purchaseUpgrade(upgradeName:string){
+        this.#player.purchaseByName(upgradeName);
+    }
+
 
 }

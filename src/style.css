@@ -294,3 +294,216 @@ code {
     border-right-color: var(--border);
   }
 }
+/* =========================
+   MONEY CLICKER STYLES
+   ========================= */
+
+body {
+    min-height: 100vh;
+    background: #f6f2ff;
+}
+
+/* Main game container */
+#app {
+    width: 700px;
+    max-width: 90%;
+    min-height: auto;
+
+    margin: 60px auto;
+    padding: 40px;
+
+    border: none;
+    border-radius: 18px;
+
+    background: white;
+
+    box-shadow:
+            0 10px 30px rgba(0, 0, 0, 0.08);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 20px;
+}
+
+/* Title */
+#app h1 {
+    margin: 0;
+
+    font-size: 42px;
+    font-weight: 700;
+
+    color: #2d2438;
+}
+
+/* Divider */
+#app hr {
+    width: 100%;
+    border: none;
+    border-top: 1px solid #e8e2ef;
+}
+
+/* Money display */
+#buy-power {
+    font-weight: 700;
+    font-size: 28px;
+    color: #8b3fd1;
+}
+
+/* The div containing the money */
+#app > div:first-of-type {
+    font-size: 26px;
+    color: #4f4658;
+}
+
+/* Put Click Me and Upgrade Store beside each other */
+#clicker {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    gap: 16px;
+
+    width: 100%;
+}
+
+/* General button styling */
+button {
+    padding: 12px 22px;
+
+    border: none;
+    border-radius: 10px;
+
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+            transform 0.15s ease,
+            box-shadow 0.15s ease,
+            background 0.15s ease;
+}
+
+/* Click button */
+#click-button {
+    background: #8b3fd1;
+    color: white;
+
+    min-width: 140px;
+}
+
+#click-button:hover {
+    background: #7630ba;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+            0 6px 15px rgba(139, 63, 209, 0.25);
+}
+
+/* Upgrade store button */
+#purchase-upgrades {
+    background: #eee5f8;
+    color: #7135a8;
+
+    min-width: 140px;
+}
+
+#purchase-upgrades:hover {
+    background: #dfcff0;
+
+    transform: translateY(-2px);
+}
+
+/* =========================
+   UPGRADE STORE DIALOG
+   ========================= */
+
+#upgrade-store {
+    width: 500px;
+    max-width: 85%;
+
+    padding: 30px;
+
+    border: none;
+    border-radius: 16px;
+
+    background: white;
+    color: #403747;
+
+    box-shadow:
+            0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+/* Darkens background when popup is open */
+#upgrade-store::backdrop {
+    background: rgba(25, 15, 35, 0.5);
+}
+
+/* Dialog title */
+#upgrade-store h2 {
+    margin-bottom: 25px;
+
+    font-size: 28px;
+    font-weight: 700;
+
+    color: #2d2438;
+}
+
+/* Upgrade purchase buttons */
+#purchase-advisor,
+#purchase-employer {
+    background: #8b3fd1;
+    color: white;
+
+    margin-right: 12px;
+}
+
+#purchase-advisor:hover,
+#purchase-employer:hover {
+    background: #7630ba;
+
+    transform: translateY(-1px);
+}
+
+/* Level + price */
+#upgrade-store span {
+    margin-right: 10px;
+}
+
+/* Exit button */
+#close-store {
+    margin-top: 10px;
+
+    background: #eeeeee;
+    color: #555;
+}
+
+#close-store:hover {
+    background: #dddddd;
+}
+
+/* Small screens */
+@media (max-width: 600px) {
+
+    #app {
+        margin: 25px auto;
+        padding: 25px;
+    }
+
+    #app h1 {
+        font-size: 32px;
+    }
+
+    #clicker {
+        flex-direction: column;
+    }
+
+    #click-button,
+    #purchase-upgrades {
+        width: 100%;
+    }
+}
