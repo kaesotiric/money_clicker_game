@@ -6,29 +6,32 @@ import {FinancialAdvisor} from "./financial-advisor.ts";
 
 export default class Player {
     // #name: string;
-    #buyPower: number;
-    #currClick: number;
-    #upgrades: Array<Upgrade>;
+    #buyPower: number; // The current money/buy power the user has
+    #currClick: number; // How much per click is
+    #upgrades: Array<Upgrade>; // List of upgrades the user has
     #listeners: Array<Listener>;
 
     constructor() {
-        // this.#name = name;
         this.#currClick = 1;
         this.#buyPower = 0;
         this.#upgrades = new Array<Upgrade>();
         this.#listeners = new Array<Listener>();
+        this.fillArray()
         this.#notifyAll();
         this.#checkMoney();
         this.#checkClick();
     }
 
-    // get name(): string {
-    //     return this.#name;
-    // }
 
     get buyPower(): number {
         return this.#buyPower;
     }
+    get upgrades(){
+        return this.#upgrades;
+    }
+    setBuyPower(value: number ){
+        this.#buyPower = value;
+}
 
     get currClick(): number {
         return this.#currClick;
@@ -69,7 +72,7 @@ export default class Player {
     }
 
     purchaseUpgrade(upgrade: Upgrade): void { ///**PROLLY WANT TO MAKE THIS A GENERAL METHOD IE PURCHASE USING STRING NAME
-
+        this.#checkMoney();
         console.log("buyPowerCOST is now", upgrade.getBuyPowerCost());
         // upgrade.setBuyPowerCost();
         const cost = upgrade.getBuyPowerCost();
@@ -93,8 +96,6 @@ export default class Player {
 
 
     fillArray(){
-        // let advisor = new FinancialAdvisor();
-        // let employer = new Employer();
         this.#upgrades.push(new FinancialAdvisor());
         this.#upgrades.push(new Employer());
         this.#notifyAll();
