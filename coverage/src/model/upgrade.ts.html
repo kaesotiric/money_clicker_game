@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.66% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>13/15</span>
+                <span class='fraction'>17/17</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>8/10</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92.85% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>13/14</span>
+                <span class='fraction'>17/17</span>
             </div>
         
             
@@ -126,76 +126,76 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">24x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type Listener from "./listener.ts";
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import assert from "../assertions.ts";
+import {UpgradeType} from "./UpgradeType.ts";
 &nbsp;
 export abstract class Upgrade {
-    #name: string;
+    #name: UpgradeType;
     #level: number;
     #production: number;
     #buyPowerCost: number;
-    #listeners: Array&lt;Listener&gt;;
 &nbsp;
-    constructor(name:string, level:number, production:number, buyPowerCost:number){
+    constructor(name:UpgradeType, level:number, production:number, buyPowerCost:number){
         this.#name = name;
         this.#level = level;
         this.#production = production;
         this.#buyPowerCost = buyPowerCost;
-        this.#listeners = new Array&lt;Listener&gt;();
     }
         increaseLevel(): void {
-            this.#level += 1;
-            // this.#notifyAll();
+            const oldLvl = this.#level; // Saves initial level
+            this.#level ++;
+            assert(this.#level === oldLvl + 1, "Level should increase by 1"); //Post cond
+            this.#checkInvariants();
         }
         abstract calculateProduction(level:number):number;
         abstract calculateCost(level:number):number;
 &nbsp;
         setBuyPowerCost(){
             this.#buyPowerCost = this.calculateCost(this.#level);
-            this.#notifyAll();
-&nbsp;
+            this.#checkInvariants();
         }
 &nbsp;
     // Getters
@@ -214,14 +214,14 @@ export abstract class Upgrade {
     getBuyPowerCost(): number {
         return this.#buyPowerCost;
     }
-<span class="fstat-no" title="function not covered" >    registerListener(l</span>istener: Listener): void {
-<span class="cstat-no" title="statement not covered" >        this.#listeners.push(listener);</span>
-    }
 &nbsp;
-    #notifyAll(): void {
-        this.#listeners.<span class="fstat-no" title="function not covered" >forEach((l</span>istener) =&gt; <span class="cstat-no" title="statement not covered" >listener.notify())</span>;
-    }
 &nbsp;
+    #checkInvariants():void{
+        assert(this.#level &gt;= 0, "Level can't be negative");
+        assert(this.#buyPowerCost &gt;= 1, "buyPowerCost can't be negative");
+        assert(this.#production &gt;= 1, "An upgrade's production has to be at least 1");
+&nbsp;
+    }
 }</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -229,7 +229,7 @@ export abstract class Upgrade {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-20T23:37:12.737Z
+                at 2026-07-21T01:55:16.658Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

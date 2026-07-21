@@ -1,7 +1,12 @@
+/**
+ * Displays the upgrade store
+ * Shows upgrade levels and prices and sends purchase actions to the controller
+ */
+
 import type MoneyController from "../controller/money-controller.ts";
 import type Player from "../model/player.ts";
-// import {FinancialAdvisor} from "../model/financial-advisor.ts";
 import type Listener from "../model/listener.ts";
+import {UpgradeType} from "../model/UpgradeType.ts";
 
 export default class CreateUpgradeView implements Listener{
     #player : Player;
@@ -53,34 +58,49 @@ export default class CreateUpgradeView implements Listener{
         this.#dialog
             .querySelector<HTMLButtonElement>("#purchase-advisor")!
             .addEventListener("click", () => {
-                this.#controller.purchaseUpgrade("Financial Advisor");
+                this.#controller.purchaseUpgrade(UpgradeType.FinancialAdvisor);
             });
         this.#dialog
             .querySelector<HTMLButtonElement>("#purchase-employer")!
             .addEventListener("click", () => {
-                this.#controller.purchaseUpgrade("Employer");
+                this.#controller.purchaseUpgrade(UpgradeType.Employer);
             });
     }
-
+    /**
+     * Shows the upgrade store
+     * Side effects: updates the upgrade information and opens the dialog
+     */
     show(): void {
        this.notify();
         this.#dialog.showModal();
     }
+    /**
+     * Updates the view when the player model changes
+     * Side effects: updates the displayed upgrade levels and prices
+     */
     notify(): void {
         this.updateLevel();
         this.updatePrice()
     }
+    /**
+     * Updates the displayed levels using the current upgrade levels from the player model
+     * Side effects: changes the advisor and employer levels shown in the view
+     */
     private updateLevel(): void {
         this.#dialog.querySelector<HTMLSpanElement>("#advisor-level")!
-            .textContent = this.#player.getAdvisorLevel("Financial Advisor").toString();
+            .textContent = this.#player.getUpgradeLevel(UpgradeType.FinancialAdvisor).toString();
         this.#dialog.querySelector<HTMLSpanElement>("#employer-level")!
-            .textContent = this.#player.getAdvisorLevel("Employer").toString();
+            .textContent = this.#player.getUpgradeLevel(UpgradeType.Employer).toString();
     }
+    /**
+     * Updates the displayed prices using the current upgrade prices from the player model
+     * Side effects: changes the advisor and employer prices shown in the view
+     */
     private updatePrice(): void {
         this.#dialog.querySelector<HTMLSpanElement>("#advisor-price")!
-            .textContent = this.#player.getPrice("Financial Advisor").toString();
+            .textContent = this.#player.getPrice(UpgradeType.FinancialAdvisor).toString();
         this.#dialog.querySelector<HTMLSpanElement>("#employer-price")!
-            .textContent = this.#player.getPrice("Employer").toString();
+            .textContent = this.#player.getPrice(UpgradeType.Employer).toString();
     }
 
 }

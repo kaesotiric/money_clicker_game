@@ -1,3 +1,7 @@
+/**
+ * Displays the main money clicker view
+ * Shows the player's buy power and sends user actions to the controller
+ */
 
 import type Player from "../model/player.ts";
 import type Listener from "../model/listener.ts";
@@ -50,16 +54,26 @@ export default class MoneyView implements Listener {
 
         this.notify();
     }
-
+    /**
+     * Updates the view when the player model changes
+     * Side effects: updates the displayed buy power and prints a message to the console
+     */
     notify(): void {
         console.log("View notified");
         this.updateBuyPower();
     }
-
+    /**
+     * Updates the displayed buy power using the current value from the player model
+     * Side effects: changes the buy power shown on the page
+     */
     updateBuyPower(): void {
         document.querySelector("#buy-power")!.textContent =
             this.#player.buyPower.toString();
     }
+    /**
+     * Updates the displayed value using the player's current buy power
+     * Side effects: changes the value shown in the buy-power element
+     */
     level():void{
         document.querySelector("#buy-power")!.textContent =
             this.#player.buyPower.toString();

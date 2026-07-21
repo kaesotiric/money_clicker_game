@@ -1,26 +1,36 @@
+/**
+ * Handles user actions from the views
+ * Connects the views to the player model
+ */
 import Player from "../model/player.ts";
 import MoneyView from "../view/money-view.ts";
 import CreateUpgradeView from "../view/create-upgrade-view.ts";
+import type {UpgradeType} from "../model/UpgradeType.ts";
 
 export default class MoneyController {
 
     #player: Player;
-    #view: MoneyView;
+    // #view: MoneyView;
     #createUpgradeView?: CreateUpgradeView;
 
     constructor() {
         this.#player = new Player();
-        this.#player.fillArray()
-
-        this.#view = new MoneyView(this.#player, this);
-
-        this.#player.fillArray();
+        // this.#player.fillArray()
+        new MoneyView(this.#player, this);
     }
 
+    /**
+     * Handles the money button click from the view
+     * Side effects: tells the player model to process the click
+     */
     handleClick(): void {
         this.#player.click();
     }
 
+    /**
+     * Handles showing the upgrade store from the view
+     * Side effects: creates the upgrade view if it does not already exist and shows it
+     */
     showCreateUpgradeView(): void {
 
         // Create the dialog the first time
@@ -31,7 +41,13 @@ export default class MoneyController {
         // Show the dialog
         this.#createUpgradeView.show();
     }
-    purchaseUpgrade(upgradeName:string){
+
+    /**
+     * Handles an upgrade purchase request from the view
+     * @param upgradeName the type of upgrade being purchased
+     * Side effects: tells the player model to attempt the purchase
+     */
+    purchaseUpgrade(upgradeName: UpgradeType) {
         this.#player.purchaseByName(upgradeName);
     }
 

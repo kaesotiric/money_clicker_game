@@ -1,13 +1,18 @@
+/**
+ * Represents the player in the game
+ * Stores the player's buy power, click amount and upgrades
+ */
+
 import assert from "../assertions.ts";
 import type Listener from "./listener.ts";
 import type {Upgrade} from "./upgrade.ts";
 import {Employer} from "./employer.ts";
 import {FinancialAdvisor} from "./financial-advisor.ts";
+import type {UpgradeType} from "./UpgradeType.ts";
 
 export default class Player {
-    // #name: string;
-    #buyPower: number; // The current money/buy power the user has
-    #currClick: number; // How much per click is
+    #buyPower: number; // The current money or buy power the user has
+    #currClick: number; // How much user earns per click
     #upgrades: Array<Upgrade>; // List of upgrades the user has
     #listeners: Array<Listener>;
 
@@ -16,7 +21,7 @@ export default class Player {
         this.#buyPower = 0;
         this.#upgrades = new Array<Upgrade>();
         this.#listeners = new Array<Listener>();
-        this.fillArray()
+        this.fillArray(); // Initializes the player with all available upgrades at level 0
         this.#notifyAll();
         this.#checkMoney();
         this.#checkClick();
@@ -26,44 +31,28 @@ export default class Player {
     get buyPower(): number {
         return this.#buyPower;
     }
-    get upgrades(){
-        return this.#upgrades;
-    }
-    setBuyPower(value: number ){
+
+    /**
+     * Sets the player's current buy power to the given value.
+     * @param value the new amount of buy power. Must be greater than or equal to 0.
+     * Postcondition: the player's buy power is equal to value.
+     * Side effects: Changes the player's current buy power.
+     */
+    setBuyPower(value: number) {
+        this.#checkMoney();
         this.#buyPower = value;
-}
+        this.#checkMoney();
+    }
 
     get currClick(): number {
         return this.#currClick;
     }
-    getAdvisorLevel(name: string): number{
-        for(let i = 0; i<this.#upgrades.length; i++) {
-            if (this.#upgrades[i].getName() === ("Financial Advisor") && name === "Financial Advisor"){
-                return this.#upgrades[i].getLevel();
-            }else if(this.#upgrades[i].getName() === ("Employer") && name === "Employer"){
-                return this.#upgrades[i].getLevel();
-            }
-        }
-        return 0;
-    }
-    //Change Later
-    getPrice(type:string):number{ //**make more dynamic
-        for(let i = 0; i<this.#upgrades.length; i++) {
-            if (this.#upgrades[i].getName() === ("Financial Advisor") && type === "Financial Advisor"){
-                return this.#upgrades[i].getBuyPowerCost();
-            }else if (this.#upgrades[i].getName() === ("Employer") && type === "Employer"){
-                return this.#upgrades[i].getBuyPowerCost();
-            }
-        }
-        return 0;
-    }
 
-    increaseCPS(by: number): void {
-        this.#currClick += by;
-        this.#checkClick();
-        this.#notifyAll();
-    }
-
+    /**
+     * Increases the player's buy power by the current click amount
+     * Postcondition: buy power is increased by currClick
+     * Side effects: changes buyPower, prints the new buy power and notifies listeners
+     */
     click(): void {
         this.#buyPower += this.currClick;
         console.log("buyPower is now", this.#buyPower);
@@ -71,10 +60,49 @@ export default class Player {
         this.#notifyAll();
     }
 
-    purchaseUpgrade(upgrade: Upgrade): void { ///**PROLLY WANT TO MAKE THIS A GENERAL METHOD IE PURCHASE USING STRING NAME
+    /**
+     * Gets current level of the specified upgrade
+     * @param type the type of upgrade whose level is being retrieved
+     *             Must be a valid UpgradeType.
+     * @return the current level of the matching upgrade, or 0 if no
+     *         matching upgrade is found.
+     * Postcondition: the player's state is unchanged.
+     */
+    getUpgradeLevel(type: UpgradeType): number {
+        for (let i = 0; i < this.#upgrades.length; i++) {
+            if (this.#upgrades[i].getName() === type) {
+                return this.#upgrades[i].getLevel();
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Gets current price of the specified upgrade
+     * @param type the type of upgrade whose price is being retrieved
+     * Must be a valid UpgradeType
+     * @return the current price of the matching upgrade, or 0 if no matching upgrade is found
+     * Postcondition: the player's state is unchanged
+     */
+    getPrice(type: UpgradeType): number {
+        for (let i = 0; i < this.#upgrades.length; i++) {
+            if (this.#upgrades[i].getName() === type) {
+                return this.#upgrades[i].getBuyPowerCost();
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Attempts to purchase the specified upgrade
+     * @param upgrade upgrade being purchased
+     * Postcondition: if the player has enough buy power, the cost is removed,
+     * the upgrade level increases and currClick increases
+     * If the player cannot afford it, nothing changes
+     * Side effects: can change buyPower, currClick, upgrade level and upgrade cost
+     */
+    purchaseUpgrade(upgrade: Upgrade): void {
         this.#checkMoney();
-        console.log("buyPowerCOST is now", upgrade.getBuyPowerCost());
-        // upgrade.setBuyPowerCost();
         const cost = upgrade.getBuyPowerCost();
 
         if (this.#buyPower < cost) {
@@ -85,35 +113,38 @@ export default class Player {
         upgrade.increaseLevel();
         upgrade.setBuyPowerCost();
 
-        // Update the exact upgrade that was clicked
-
-        this.#currClick += upgrade.getProduction();
+        this.#currClick += upgrade.getProduction(); // Update the exact upgrade that was clicked
 
         this.#checkMoney();
         this.#checkClick();
         this.#notifyAll();
     }
 
-
-    fillArray(){
+    /**
+     * Adds all available upgrades to the player's upgrade list
+     * Postcondition: the upgrade list contains a Financial Advisor and Employer
+     * Side effects: adds upgrades to the list and notifies listeners
+     */
+    fillArray() {
         this.#upgrades.push(new FinancialAdvisor());
         this.#upgrades.push(new Employer());
         this.#notifyAll();
 
     }
 
-    purchaseByName(upgradeName : string):void{
-        if(this.#upgrades.length >=1){
-           for(let i = 0; i<this.#upgrades.length; i++) {
-               if (this.#upgrades[i].getName() === ("Financial Advisor")
-                   && upgradeName === "Financial Advisor") {
-                   this.purchaseUpgrade(this.#upgrades[i]); // this will check first if player has enough money
-               }else if (this.#upgrades[i].getName() === ("Employer")
-                   && upgradeName === "Employer"){
-                   this.purchaseUpgrade(this.#upgrades[i]); // this will check first if player has enough money
-               }
-           }
-
+    /**
+     * Attempts to purchase an upgrade using its type
+     * @param type the type of upgrade being purchased
+     * Must be a valid UpgradeType
+     * Side effects: may change buyPower, currClick, upgrade level and upgrade cost
+     */
+    purchaseByName(type: UpgradeType): void {
+        if (this.#upgrades.length >= 1) {
+            for (let i = 0; i < this.#upgrades.length; i++) {
+                if (this.#upgrades[i].getName() === type) {
+                    this.purchaseUpgrade(this.#upgrades[i]); // This will check first if player has enough money
+                }
+            }
         }
     }
 
@@ -132,4 +163,5 @@ export default class Player {
     #checkClick(): void {
         assert(this.#currClick >= 0, "currentClick can't be negative");
     }
+
 }
