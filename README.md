@@ -11,7 +11,14 @@ and `Money` should increment by 1. Viewing available upgrades could be done by c
 From there, choose from two upgrades to purchase, `Financial Advisor` and `Employer`.
 Each upgrades cost more as the level increases, but so does the amount of money you make everytime you click! 
 ---
-
+# Phase 1 Implementation Submission 2 Changes
+---
+- Below are the changes made according to the grader's feedback. 
+- Used TS' set and get properties
+- Updated code to not have multiple return statements
+- Made methods that are only used by its class to be private using #
+- 
+---
 # Changes
 ---
 - Implemented a money clicker game as described above using the MVC Architecture 

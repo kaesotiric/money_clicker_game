@@ -4,9 +4,9 @@ import {Employer} from "../model/employer.ts";
 
 test('Upgrade increase clicks based on upgrade', () => {
     const upgrade = new FinancialAdvisor();
-    expect(upgrade.getLevel() === 0);
+    expect(upgrade.upgradeLevel === 0);
     upgrade.increaseLevel();
-    expect(upgrade.getLevel() === 1)
+    expect(upgrade.upgradeLevel === 1)
 });
 
 test("Employer calculates number of clicks/level clicks correctly", () => {

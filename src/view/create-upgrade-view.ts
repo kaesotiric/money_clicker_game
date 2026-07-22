@@ -79,28 +79,28 @@ export default class CreateUpgradeView implements Listener{
      * Side effects: updates the displayed upgrade levels and prices
      */
     notify(): void {
-        this.updateLevel();
-        this.updatePrice()
+        this.#updateLevel();
+        this.#updatePrice()
     }
     /**
      * Updates the displayed levels using the current upgrade levels from the player model
      * Side effects: changes the advisor and employer levels shown in the view
      */
-    private updateLevel(): void {
+    #updateLevel(): void {
         this.#dialog.querySelector<HTMLSpanElement>("#advisor-level")!
-            .textContent = this.#player.getUpgradeLevel(UpgradeType.FinancialAdvisor).toString();
+            .textContent = this.#player.findUpgradeLevel(UpgradeType.FinancialAdvisor).toString();
         this.#dialog.querySelector<HTMLSpanElement>("#employer-level")!
-            .textContent = this.#player.getUpgradeLevel(UpgradeType.Employer).toString();
+            .textContent = this.#player.findUpgradeLevel(UpgradeType.Employer).toString();
     }
     /**
      * Updates the displayed prices using the current upgrade prices from the player model
      * Side effects: changes the advisor and employer prices shown in the view
      */
-    private updatePrice(): void {
+    #updatePrice(): void {
         this.#dialog.querySelector<HTMLSpanElement>("#advisor-price")!
-            .textContent = this.#player.getPrice(UpgradeType.FinancialAdvisor).toString();
+            .textContent = this.#player.findPrice(UpgradeType.FinancialAdvisor).toString();
         this.#dialog.querySelector<HTMLSpanElement>("#employer-price")!
-            .textContent = this.#player.getPrice(UpgradeType.Employer).toString();
+            .textContent = this.#player.findPrice(UpgradeType.Employer).toString();
     }
 
 }

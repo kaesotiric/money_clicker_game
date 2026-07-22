@@ -7,16 +7,17 @@ import assert from "../assertions.ts";
 import {UpgradeType} from "./UpgradeType.ts";
 
 export abstract class Upgrade {
-    #name: UpgradeType;
-    #level: number;
-    #production: number;
+    #upgradeName: UpgradeType;
+    #upgradeLevel: number;
+    #upgradeProduction: number;
     #buyPowerCost: number;
 
-    constructor(name: UpgradeType, level: number, production: number, buyPowerCost: number) {
-        this.#name = name;
-        this.#level = level;
-        this.#production = production;
+    constructor(upgradeName: UpgradeType, level: number, production: number, buyPowerCost: number) {
+        this.#upgradeName = upgradeName;
+        this.#upgradeLevel = level;
+        this.#upgradeProduction = production;
         this.#buyPowerCost = buyPowerCost;
+        this.#checkInvariants();
     }
 
     /**
@@ -25,9 +26,9 @@ export abstract class Upgrade {
      * Side effects: changes the upgrade level
      */
     increaseLevel(): void {
-        const oldLvl = this.#level; // Saves initial level
-        this.#level++;
-        assert(this.#level === oldLvl + 1, "Level should increase by 1"); //Post cond
+        const oldLvl = this.#upgradeLevel; // Saves initial level
+        this.#upgradeLevel++;
+        assert(this.#upgradeLevel === oldLvl + 1, "Level should increase by 1"); //Post cond
         this.#checkInvariants();
     }
 
@@ -39,25 +40,25 @@ export abstract class Upgrade {
      * Postcondition: buyPowerCost is equal to the calculated cost for the current level
      * Side effects: changes the upgrade's buy power cost
      */
-    setBuyPowerCost() {
-        this.#buyPowerCost = this.calculateCost(this.#level);
+    updateBuyPowerCost() {
+        this.#buyPowerCost = this.calculateCost(this.#upgradeLevel);
         this.#checkInvariants();
     }
 
     // Getters
-    getName(): string {
-        return this.#name;
+    get upgradeName(): string {
+        return this.#upgradeName;
     }
 
-    getLevel(): number {
-        return this.#level;
+    get upgradeLevel(): number {
+        return this.#upgradeLevel;
     }
 
-    getProduction(): number { // How much money it will produce
-        return this.#production;
+    get productionValue(): number { // How much money it will produce
+        return this.#upgradeProduction;
     }
 
-    getBuyPowerCost(): number {
+    get buyPowerCost(): number {
         return this.#buyPowerCost;
     }
 
@@ -67,9 +68,9 @@ export abstract class Upgrade {
      * Side effects: throws an assertion error if an invariant is broken
      */
     #checkInvariants(): void {
-        assert(this.#level >= 0, "Level can't be negative");
+        assert(this.#upgradeLevel >= 0, "Level can't be negative");
         assert(this.#buyPowerCost >= 1, "buyPowerCost can't be negative");
-        assert(this.#production >= 1, "An upgrade's production has to be at least 1");
+        assert(this.#upgradeProduction >= 1, "An upgrade's production has to be at least 1");
 
     }
 }

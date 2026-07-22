@@ -60,13 +60,13 @@ export default class MoneyView implements Listener {
      */
     notify(): void {
         console.log("View notified");
-        this.updateBuyPower();
+        this.#updateBuyPower();
     }
     /**
      * Updates the displayed buy power using the current value from the player model
      * Side effects: changes the buy power shown on the page
      */
-    updateBuyPower(): void {
+    #updateBuyPower(): void {
         document.querySelector("#buy-power")!.textContent =
             this.#player.buyPower.toString();
     }
@@ -74,8 +74,8 @@ export default class MoneyView implements Listener {
      * Updates the displayed value using the player's current buy power
      * Side effects: changes the value shown in the buy-power element
      */
-    level():void{
-        document.querySelector("#buy-power")!.textContent =
-            this.#player.buyPower.toString();
-    }
+    // level():void{
+    //     document.querySelector("#buy-power")!.textContent =
+    //         this.#player.buyPower.toString();
+    // }
 }

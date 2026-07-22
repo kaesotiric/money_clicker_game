@@ -10,12 +10,10 @@ import type {UpgradeType} from "../model/UpgradeType.ts";
 export default class MoneyController {
 
     #player: Player;
-    // #view: MoneyView;
     #createUpgradeView?: CreateUpgradeView;
 
     constructor() {
         this.#player = new Player();
-        // this.#player.fillArray()
         new MoneyView(this.#player, this);
     }
 
