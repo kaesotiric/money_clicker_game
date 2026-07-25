@@ -34,4 +34,16 @@ flowchart TD
         upgraded== return to game ===>continueGame
     end
 ```
+## User Log in Flow Chart
+```mermaid
+flowchart TD
+    displayLogin[[Create account display]]
+    processLogIn{Create account}
+    
+    displayLogin == input: usename & password ==> processLogIn
+    processLogIn -.password complexity requirement error.->displayLogin
+    processLogIn -.duplicate username.->displayLogin
+    processLogIn -.account created successfully.->continueGame
+    continueGame[[Load Game]]
+```
 

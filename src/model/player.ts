@@ -5,10 +5,10 @@
 
 import assert from "../assertions.ts";
 import type Listener from "./listener.ts";
-import type {Upgrade} from "./upgrade.ts";
-import {Employer} from "./employer.ts";
-import {FinancialAdvisor} from "./financial-advisor.ts";
-import type {UpgradeType} from "./UpgradeType.ts";
+import Upgrade from "./upgrade.ts";
+// import {Employer} from "./employer.ts";
+// import {FinancialAdvisor} from "./financial-advisor.ts";
+import {UpgradeType} from "./UpgradeType.ts";
 
 export default class Player {
     #buyPower: number; // The current money or buy power the user has
@@ -16,7 +16,7 @@ export default class Player {
     #upgrades: Array<Upgrade>; // List of upgrades the user has
     #listeners: Array<Listener>;
 
-    private constructor() {
+    constructor() {
         this.#currClick = 1;
         this.#buyPower = 0;
         this.#upgrades = new Array<Upgrade>();
@@ -124,8 +124,12 @@ export default class Player {
      * Side effects: adds upgrades to the list and notifies listeners
      */
     #fillArray(): void {
-        this.#upgrades.push(new FinancialAdvisor());
-        this.#upgrades.push(new Employer());
+        // 15,20 financial
+        //20, 100 employer
+        this.#upgrades.push(new Upgrade(UpgradeType.FinancialAdvisor, 0, 20, 50));
+        this.#upgrades.push(new Upgrade(UpgradeType.Employer, 0, 20, 100));
+        // this.#upgrades.push(upgrade);
+        // this.#upgrades.push(new Employer());
     }
 
     /**
@@ -135,13 +139,17 @@ export default class Player {
      * Side effects: may change buyPower, currClick, upgrade level and upgrade cost
      */
     purchaseByName(type: UpgradeType): void {
-        if (this.#upgrades.length >= 1) {
+        if(this.#upgrades.length == 0){
+
+        }
+
+        // if(this.#upgrades.upgradeName === type)
+        // if (this.#upgrades.length >= 1) {
             for (let i = 0; i < this.#upgrades.length; i++) {
                 if (this.#upgrades[i].upgradeName === type) {
                     this.#purchaseUpgrade(this.#upgrades[i]); // This will check first if player has enough money
                 }
             }
-        }
     }
 
     registerListener(listener: Listener): void {

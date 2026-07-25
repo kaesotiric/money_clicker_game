@@ -6,17 +6,19 @@
 import assert from "../assertions.ts";
 import {UpgradeType} from "./UpgradeType.ts";
 
-export abstract class Upgrade {
+export default class Upgrade {
     #upgradeName: UpgradeType;
     #upgradeLevel: number;
     #upgradeProduction: number;
     #buyPowerCost: number;
+    // #canAutoClick: boolean;
 
     constructor(upgradeName: UpgradeType, level: number, production: number, buyPowerCost: number) {
         this.#upgradeName = upgradeName;
         this.#upgradeLevel = level;
         this.#upgradeProduction = production;
         this.#buyPowerCost = buyPowerCost;
+        // this.#canAutoClick = false;
         this.#checkInvariants();
     }
 
@@ -32,8 +34,12 @@ export abstract class Upgrade {
         this.#checkInvariants();
     }
 
-    abstract calculateProduction(level: number): number; // Calculates how much the upgrade produces at given level
-    abstract calculateCost(level: number): number; // Calculates how much the upgrade cost at given level
+    calculateProduction(level: number){
+        return (level + 1) * this.productionValue; // Each upgrade will add additional n clicks per click on item
+    } // Calculates how much the upgrade produces at given level
+     calculateCost(level: number){// Calculates how much the upgrade cost at given level
+         return (level + 1) * this.buyPowerCost; // Returns the new cost to purchase the upgrade
+     }
 
     /**
      * Updates buy power cost based on the current upgrade level
@@ -61,6 +67,12 @@ export abstract class Upgrade {
     get buyPowerCost(): number {
         return this.#buyPowerCost;
     }
+    // get canAutoClick(): boolean {
+    //     return this.#canAutoClick;
+    // }
+    // autoClick():void{
+    //     this.#canAutoClick = true;
+    // }
 
     /**
      * Checks that the upgrade values follow the class invariants

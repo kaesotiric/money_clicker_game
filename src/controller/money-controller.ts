@@ -5,7 +5,7 @@
 import Player from "../model/player.ts";
 import MoneyView from "../view/money-view.ts";
 import CreateUpgradeView from "../view/create-upgrade-view.ts";
-import type {UpgradeType} from "../model/UpgradeType.ts";
+import {UpgradeType} from "../model/UpgradeType.ts";
 
 export default class MoneyController {
 
