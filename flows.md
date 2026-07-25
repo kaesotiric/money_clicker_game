@@ -39,11 +39,41 @@ flowchart TD
 flowchart TD
     displayLogin[[Create account display]]
     processLogIn{Create account}
-    
+    displayAccExists[Username already exists in the system]
+    accCreatedSuccess[Account created successfully]
     displayLogin == input: usename & password ==> processLogIn
     processLogIn -.password complexity requirement error.->displayLogin
-    processLogIn -.duplicate username.->displayLogin
-    processLogIn -.account created successfully.->continueGame
+    processLogIn -.duplicate username.->displayAccExists
+    displayAccExists --> continueGame
+    processLogIn -.account created successfully.->accCreatedSuccess
+    accCreatedSuccess --> continueGame
+    continueGame[[Sign in to Game]]
+```
+## User Sign in Flow Chart
+```mermaid
+flowchart TD
+    displaySignin[[Sign in to account display]]
+    processAccount{Process account}
+    makeAcc[[Make account]]
+    
+
+    displaySignin == input: usename & password ==> processAccount
+    processAccount -.password mismatch.->displaySignin
+    processAccount -.username does not exist.->makeAcc
+    processAccount -.account signed in successfully.->continueGame
     continueGame[[Load Game]]
 ```
+## Building Autoclicker Flow Chart
+```mermaid
+flowchart TD
+    begin[[Timer for autoclicking begins]]
+    calculate{Calculate production per second}
+    buyPower[[Display updated buy power ]]
 
+    begin --> calculate
+    calculate --> buyPower
+
+```
+### Changes
+
+* After phase 1 added the flowchart for sign in, account creation, and building autoclicker

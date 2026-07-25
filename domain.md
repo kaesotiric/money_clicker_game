@@ -21,7 +21,6 @@ class Player {
     }
     note for Player "Class Invariants:
     <ul>
-    <li>name!=null</li>
     <li>currClick>=1</li>
     <li>clickBuyPower>=0</li>
     <li>upgrades!=null</li>
@@ -30,18 +29,19 @@ class Player {
 
     class Account{
         - ~String username
-        - ~String password
+        - String password
         - ~Player player
         + buildAccount()
         
     }
     note for Account "Class Invariants:
     <ul>
-    <li>username.length>=3</li>
-    <li>password.length>=8</li>
+    <li>username is not empty</li>
+    <li>password is not empty</li>
     </ul>"
   
      class Upgrade {
+         -~id integer
          - Player player
          - UpgradeType name
          - int level
@@ -68,36 +68,32 @@ class Player {
     </ul>"
     
     
-
-    Player "1" --* "*" Upgrade
-    Upgrade "*"--o "1" Player
-    Account "1" --* "1" Player
-    Player --o UpgradeType
-    Player "1" --o "1" Account
-%%    Account --o "1" Player
-
-
-    Upgrade <|-- RoyalMint
-    Upgrade <|-- Bank
-     
-    class RoyalMint {
-        + calculateProduction(level) double
-        + calculateCost(level) double
+    Player "1" o--* "*" Upgrade
+    Account "1" o--* "1" Player
+%%    Player --> UpgradeType
+    Upgrade --> UpgradeType
+    
+    class Building{
+        - ~id integer
+        - intervalSpeed double
+        + calculateProduction(level) * double 
+        + calculateCost(level) * double
         + autoClick() void
-    }
-    class Bank {
-        + calculateProduction(level) double
-        + calculateCost(level) double
-        + autoClick() void
-    }
+ }
+    Upgrade<|-- Building
     note for Building "Class Invariants:
     <ul>
-    <li>name!=null</li>
-    <li>level>=0</li>
-    <li>production>0</li>
-    <li>buyPowerCost>0</li>
+    <li>intervalSpeed>=1</li>
     </ul>"
+````
 
 
-    
-```
+## Changes since phase 1
+* Upgrades class becomes the superclass which is extended by the Buildings class
+* Deleted the Employer and FinancialAdvisor classes as they will just be both instances of Upgrades. 
+* All types of upgrades/buildings are in the enum called UpgradeType
+* username field in Account must be unique so constraints are added
+* id field in Upgrades must be unique so constraints are added
+* id field in Buildings must be unique so constraints are added
+
+

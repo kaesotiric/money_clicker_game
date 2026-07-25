@@ -131,6 +131,14 @@ export default class Player {
         // this.#upgrades.push(upgrade);
         // this.#upgrades.push(new Employer());
     }
+    getUpgrade(type: UpgradeType): Upgrade {
+        for (let i = 0; i < this.#upgrades.length; i++) {
+            if (this.#upgrades[i].upgradeName === type) {
+                return this.#upgrades[i];
+            }
+        }
+        return new Upgrade(UpgradeType.Employer, 0, 0, 0); // no value
+    }
 
     /**
      * Attempts to purchase an upgrade using its type
@@ -139,10 +147,6 @@ export default class Player {
      * Side effects: may change buyPower, currClick, upgrade level and upgrade cost
      */
     purchaseByName(type: UpgradeType): void {
-        if(this.#upgrades.length == 0){
-
-        }
-
         // if(this.#upgrades.upgradeName === type)
         // if (this.#upgrades.length >= 1) {
             for (let i = 0; i < this.#upgrades.length; i++) {
