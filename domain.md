@@ -10,6 +10,7 @@ date: Summer 2026
 classDiagram
 
 class Player {
+    - string name
     - double currClick
     - double clickBuyPower
     - List~Upgrade~ upgrades 
@@ -69,9 +70,11 @@ class Player {
     
     
     Player "1" o--* "*" Upgrade
-    Account "1" o--* "1" Player
+    Account "1" o--* "1" Player : account owns player
 %%    Player --> UpgradeType
     Upgrade --> UpgradeType
+%%    Upgrade "1" o--* "1" Building
+    
     
     class Building{
         - ~id integer
@@ -80,7 +83,8 @@ class Player {
         + calculateCost(level) * double
         + autoClick() void
  }
-    Upgrade<|-- Building
+    Upgrade<|-- Building : inherits
+%%    Building--|> Upgrade
     note for Building "Class Invariants:
     <ul>
     <li>intervalSpeed>=1</li>

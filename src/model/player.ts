@@ -8,14 +8,18 @@ import type Listener from "./listener.ts";
 import Upgrade from "./upgrade.ts";
 import {UpgradeType} from "./UpgradeType.ts";
 import db from "./connection.ts";
+import type Account from "./account.ts";
 
 export default class Player {
+    #name: string;
+    #account: Account;
     #buyPower: number; // The current money or buy power the user has
     #currClick: number; // How much user earns per click
     #upgrades: Array<Upgrade>; // List of upgrades the user has
     #listeners: Array<Listener>;
 
-    constructor() {
+    constructor(name: string) {
+        this.#name = name;
         this.#currClick = 1;
         this.#buyPower = 0;
         this.#upgrades = new Array<Upgrade>();
@@ -31,11 +35,11 @@ export default class Player {
         const allPLayers = new Array<Player>();
         //
         let results = await db()
-            .query<{id: number}>("select id from player"); // Asking PGLite to give us data from db
+            .query<{name: string}>("select name from player"); // Asking PGLite to give us data from db
         // We then need to transform those rows into instances of Player
 
         results.rows.forEach((row) => {
-            allPLayers.push(new Player(row.id));
+            allPLayers.push(new Player(row.name));
         })
         return allPLayers;
     }
@@ -44,6 +48,12 @@ export default class Player {
         return this.#buyPower;
     }
 
+    get account():Account{
+        return this.#account;
+    }
+    set account(account){
+        this.#account = account;
+    }
     /**
      * Sets the player's current buy power to the given value, used for testing
      * @param value the new amount of buy power. Must be greater than or equal to 0.

@@ -7,6 +7,7 @@ create table if not exists account
 
 create table if not exists player(
     id serial primary key,
+    name varchar(255) not null,
     buypower integer not null,
     curr_click integer not null,
     account varchar(255) not null unique,
@@ -18,12 +19,11 @@ create table if not exists upgrades(
     id serial primary key,
     upgrade_name varchar(255) not null,
     upgrade_level integer not null,
-    upgrade_production integer not null,
-    buypower_cost integer not null,
+    upgrade_production double not null,
+    buypower_cost double not null,
     player integer not null,
     foreign key (player) references player(id)
         on delete cascade
-    --when player is deleted, upgrades will also be deleted
 );
 
 create table if not exists buildings(
@@ -32,6 +32,11 @@ create table if not exists buildings(
     foreign key(id) references upgrades(id)
 
 );
+insert into account(username, password)
+values ('kate', 'testpass');
+
+insert into player(name, buypower, curr_click, account)
+values ('Kate', 1000, 20, 'kate');
 -- insert into account(username, password) values('kate', 'testpass');
 --     insert into player(buypower,curr_click, account) values(1000, 20, 'kate'));
 -- insert into upgrades(upgrade_name, upgrade_level, upgrade_production, buypower_cost, player)

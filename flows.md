@@ -39,12 +39,12 @@ flowchart TD
 flowchart TD
     displayLogin[[Create account display]]
     processLogIn{Create account}
-    displayAccExists[Username already exists in the system]
+%%    displayAccExists[Username already exists in the system]
     accCreatedSuccess[Account created successfully]
     displayLogin == input: usename & password ==> processLogIn
     processLogIn -.password complexity requirement error.->displayLogin
-    processLogIn -.duplicate username.->displayAccExists
-    displayAccExists --> continueGame
+    processLogIn -.duplicate username: get new input.->displayLogin
+%%    displayAccExists --> continueGame
     processLogIn -.account created successfully.->accCreatedSuccess
     accCreatedSuccess --> continueGame
     continueGame[[Sign in to Game]]
@@ -71,7 +71,7 @@ flowchart TD
     buyPower[[Display updated buy power ]]
 
     begin --> calculate
-    calculate --> buyPower
+    calculate -..-> buyPower
 
 ```
 ### Changes

@@ -4,7 +4,7 @@ import {UpgradeType} from "../model/UpgradeType.ts";
 
 
 test('Can purchase the advisor upgrade', () => {
-    let player = new Player();
+    let player = new Player("");
     player.updatedBuyPower = player.findPrice(UpgradeType.FinancialAdvisor); //Sets buy power to the upgrade's price
 
     player.purchaseByName(UpgradeType.FinancialAdvisor);
@@ -16,7 +16,7 @@ test('Can purchase the advisor upgrade', () => {
     expect(player.findUpgradeLevel(UpgradeType.FinancialAdvisor)).toBe(2); // To check if it can also handle multiple upgrades
 });
 test('Can purchase the employer upgrade', () => {
-    let player = new Player();
+    let player = new Player("");
     player.updatedBuyPower = player.findPrice(UpgradeType.Employer); //Sets buy power to the upgrade's price
 
     player.purchaseByName(UpgradeType.Employer);
@@ -29,7 +29,7 @@ test('Can purchase the employer upgrade', () => {
 });
 
 test('Buy power is decreased when purchasing an upgrade', () => {
-    let player = new Player();
+    let player = new Player("");
     expect(player.buyPower).toBe(0) //Expects buyPower to start at 0
     let price = player.findPrice(UpgradeType.Employer);
     player.updatedBuyPower = price + 1; // Sets the player's money to equal the price of upgrade + 1
