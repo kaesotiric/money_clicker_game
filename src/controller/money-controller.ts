@@ -13,6 +13,9 @@ export default class MoneyController {
     #createUpgradeView?: CreateUpgradeView;
 
     constructor() {
+        //Are there any player in the database
+        //If no instance of player, then make an instance of make account
+        //If there are player, then make an instance of this view
         this.#player = new Player();
         new MoneyView(this.#player, this);
     }

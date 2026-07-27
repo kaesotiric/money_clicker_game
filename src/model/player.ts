@@ -6,9 +6,8 @@
 import assert from "../assertions.ts";
 import type Listener from "./listener.ts";
 import Upgrade from "./upgrade.ts";
-// import {Employer} from "./employer.ts";
-// import {FinancialAdvisor} from "./financial-advisor.ts";
 import {UpgradeType} from "./UpgradeType.ts";
+import db from "./connection.ts";
 
 export default class Player {
     #buyPower: number; // The current money or buy power the user has
@@ -26,7 +25,20 @@ export default class Player {
         this.#checkMoney();
         this.#checkClick();
     }
+    //Write a class static method that will get access to all players in the database
+    //returns all players in the database, it promises to contain an array of players
+    static async getAllPLayers(): Promise<Array<Player>> {
+        const allPLayers = new Array<Player>();
+        //
+        let results = await db()
+            .query<{id: number}>("select id from player"); // Asking PGLite to give us data from db
+        // We then need to transform those rows into instances of Player
 
+        results.rows.forEach((row) => {
+            allPLayers.push(new Player(row.id));
+        })
+        return allPLayers;
+    }
     get buyPower(): number {
         this.#checkMoney();
         return this.#buyPower;
