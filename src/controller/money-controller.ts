@@ -70,18 +70,43 @@ export default class MoneyController {
             }
         }
     }
-    async login(username: string, password: string): Promise<void> {
-        const account = await Account.login(username, password);
+    // async login(username: string, password: string): Promise<void> {
+    //     const account = await Account.login(username, password);
+    //
+    //     if (account === null) {
+    //         this.#createAccountView?.showErrorMessage();
+    //         return;
+    //     }
+    //
+    //     this.#account = account;
+    //     this.#createAccountView?.close();
+    //
+    //     new MoneyView(this.#account.player, this);
+    // }
+    async login(
+        username: string,
+        password: string
+    ): Promise<void> {
+        try {
+            const account =
+                await Account.login(username, password);
 
-        if (account === null) {
-            this.#createAccountView?.showErrorMessage();
-            return;
+            if (account === null) {
+                this.#createAccountView?.showErrorMessage(
+                );
+                return;
+            }
+
+            this.#account = account;
+            this.#createAccountView?.close();
+
+            new MoneyView(this.#account.player, this);
+        } catch (error) {
+            console.error("Login error:", error);
+
+            this.#createAccountView?.showErrorMessage(
+            );
         }
-
-        this.#account = account;
-        this.#createAccountView?.close();
-
-        new MoneyView(this.#account.player, this);
     }
 
 

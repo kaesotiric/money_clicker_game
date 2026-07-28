@@ -1,49 +1,46 @@
-drop table if exists buildings cascade;
-drop table if exists upgrades cascade;
-drop table if exists upgrade_type cascade;
-drop table if exists player cascade;
-drop table if exists account cascade;
+
 -- Accounts
 create table if not exists account
 (
     username varchar(255) primary key,
     password varchar(255) not null
-);
+    );
 
 create table if not exists player(
-    id serial primary key,
-    playername varchar(255) not null,
+                                     id serial primary key,
+                                     playername varchar(255) not null,
     buypower integer not null,
     curr_click integer not null,
     account varchar(255) not null unique,
     foreign key(account) references account(username)
-        on delete cascade
+    on delete cascade
 
-);
-create table if not exists upgrade_type(
-    name varchar(255) primary key,
-    buypower_cost integer not null,
-    upgrade_production integer not null
-);
+    );
 create table if not exists upgrades(
-    id serial primary key,
-    upgrade_name varchar(255) not null,
+                                       id serial primary key,
+                                       upgrade_name varchar(255) not null,
     upgrade_level integer not null,
     upgrade_production integer not null,
     buypower_cost integer not null,
     player integer not null,
     foreign key(upgrade_name) references upgrade_type(name),
     foreign key (player) references player(id)
-        on delete cascade
-);
+    on delete cascade
+    );
+-- create table if not exists upgrade_type(
+--                                            name varchar(255) primary key,
+--     buypower_cost integer not null,
+--     upgrade_production integer not null
+--     );
 
 create table if not exists buildings(
-    id integer primary key,
-    interval_speed integer not null,
+                                        id integer primary key,
+                                        interval_speed integer not null,
 
-    foreign key(id) references upgrades(id)
+                                        foreign key(id) references upgrades(id)
 
-);
+
+    );
 
 -- Add test accounts
 insert into account(username, password)
