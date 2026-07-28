@@ -1,4 +1,8 @@
-
+drop table if exists buildings cascade;
+drop table if exists upgrades cascade;
+drop table if exists upgrade_type cascade;
+drop table if exists player cascade;
+drop table if exists account cascade;
 -- Accounts
 create table if not exists account
 (
@@ -16,6 +20,11 @@ create table if not exists player(
         on delete cascade
 
 );
+create table if not exists upgrade_type(
+    name varchar(255) primary key,
+    buypower_cost integer not null,
+    upgrade_production integer not null
+);
 create table if not exists upgrades(
     id serial primary key,
     upgrade_name varchar(255) not null,
@@ -27,18 +36,12 @@ create table if not exists upgrades(
     foreign key (player) references player(id)
         on delete cascade
 );
-create table if not exists upgrade_type(
-    name varchart(255) primary key,
-    buypower_cost integer not null,
-    upgrade_production integer not null
-);
 
 create table if not exists buildings(
     id integer primary key,
     interval_speed integer not null,
 
     foreign key(id) references upgrades(id)
-
 
 );
 

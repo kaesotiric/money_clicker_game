@@ -61,7 +61,6 @@ export default class MoneyController {
             const account = await Account.createAccount(username, password);
 
             this.#account = account;
-
             this.#createAccountView?.close();
 
             new MoneyView(this.#account.player, this);

@@ -50,15 +50,35 @@ export default class Player {
         // await player.loadBuilding();
         // return player;
     }
-     public static async savePlayer(player: Player): Promise<number>{
-        const results = await db().query<{id:number}>(
-            `insert into player(playername, buypower, currClick, account)
-         values($1, $2,$3, $4)`,
-
-        [player.#name, player.buyPower, player.#currClick]
+    public static async savePlayer(player: Player): Promise<void> {
+        await db().query(
+            `
+        INSERT INTO player(
+            playername,
+            buypower,
+            curr_click,
+            account
+        )
+        VALUES ($1, $2, $3, $4);
+        `,
+            [
+                player.#name,
+                player.#buyPower,
+                player.#currClick,
+                player.#account.username
+            ]
         );
-        return results.rows[0].id; // This will give the generated ID for upgrades
-     }
+    }
+
+     // public static async savePlayer(player: Player): Promise<number>{
+     //    const results = await db().query<{id:number}>(
+     //        `insert into player(playername, buypower, currClick, account)
+     //     values($1, $2,$3, $4)`,
+     //
+     //    [player.#name, player.buyPower, player.#currClick]
+     //    );
+     //    return results.rows[0].id; // This will give the generated ID for upgrades
+     // }
 
     public async loadUpgrade(playerId:number): Promise<void>{
         const results = await db().query<{
@@ -260,14 +280,14 @@ export default class Player {
         // this.#upgrades.push(upgrade);
         // this.#upgrades.push(new Employer());
     }
-    getUpgrade(type: UpgradeType): Upgrade {
-        for (let i = 0; i < this.#upgrades.length; i++) {
-            if (this.#upgrades[i].upgradeName === type) {
-                return this.#upgrades[i];
-            }
-        }
-        return new Upgrade(UpgradeType.Employer, 0, 0, 0); // no value
-    }
+    // getUpgrade(type: UpgradeType): Upgrade {
+    //     for (let i = 0; i < this.#upgrades.length; i++) {
+    //         if (this.#upgrades[i].upgradeName === type) {
+    //             return this.#upgrades[i];
+    //         }
+    //     }
+    //     return new Upgrade(UpgradeType.Employer, 0, 0, 0); // no value
+    // }
 
     /**
      * Attempts to purchase an upgrade using its type

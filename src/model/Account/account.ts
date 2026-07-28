@@ -50,38 +50,64 @@ export default class Account {
         return allAccounts;
     }
 
-    public static async createAccount(username: string, password: string): Promise<Account> {
+    // public static async createAccount(username: string, password: string): Promise<Account> {
+    //     const results = await db().query<{ username: string }>(
+    //         `
+    //     INSERT INTO account(username, password)
+    //     VALUES ($1, $2)
+    //     ON CONFLICT (username) DO NOTHING
+    //     RETURNING username;
+    //     `,
+    //         [username, password]
+    //     );
+    //
+    //     if (results.rows.length === 0) { // No row was inserted because the username already exists
+    //         throw new DuplicateUserNameError();
+    //     }
+    //
+    //     const acc = new Account(username, password);
+    //     await Player.savePlayer(acc.player);
+    //
+    //     // // Save the player created by the acc constructor
+    //     // await db().query(
+    //     //     `
+    //     //         INSERT INTO player(
+    //     //             playername,
+    //     //             buypower,
+    //     //             curr_click,
+    //     //             account
+    //     //         )
+    //     //         VALUES ($1, $2, $3, $4);
+    //     //     `,
+    //     //     [username, 0, 1, username]
+    //     // );
+    //
+    //
+    //     return acc;
+    // }
+    public static async createAccount(
+        username: string,
+        password: string
+    ): Promise<Account> {
         const results = await db().query<{ username: string }>(
             `
-        INSERT INTO account(username, password)
-        VALUES ($1, $2)
-        ON CONFLICT (username) DO NOTHING
+                INSERT INTO account(username, password)
+                VALUES ($1, $2)
+                    ON CONFLICT (username) DO NOTHING
         RETURNING username;
-        `,
+            `,
             [username, password]
         );
 
-        if (results.rows.length === 0) { // No row was inserted because the username already exists
+        if (results.rows.length === 0) {
             throw new DuplicateUserNameError();
         }
 
+        // This constructor already creates the Player object
         const acc = new Account(username, password);
-        await Player.savePlayer(acc.player);
-
-        // Save the player created by the acc constructor
-        await db().query(
-            `
-        INSERT INTO player(
-            playername,
-            buypower,
-            curr_click,
-            account
-        )
-        VALUES ($1, $2, $3, $4);
-        `,
-            [username, 0, 1, username]
-        );
-
+        Player
+        // Saves that existing Player object into SQL
+        // await Player.savePlayer(acc.player);
 
         return acc;
     }
