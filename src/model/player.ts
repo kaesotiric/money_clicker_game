@@ -35,13 +35,84 @@ export default class Player {
         const allPLayers = new Array<Player>();
         //
         let results = await db()
-            .query<{name: string}>("select name from player"); // Asking PGLite to give us data from db
+            .query<{playername: string}>("select playername from player"); // Asking PGLite to give us data from db
         // We then need to transform those rows into instances of Player
 
         results.rows.forEach((row) => {
-            allPLayers.push(new Player(row.name));
+            allPLayers.push(new Player(row.playername));
         })
         return allPLayers;
+    }
+
+    public static async create(name:string): Promise<Player>{
+        return new Player(name);
+        // await player.loadUpgrade();
+        // await player.loadBuilding();
+        // return player;
+    }
+
+
+    public async loadUpgrade(playerId:number): Promise<void>{
+        const results = await db().query<{
+            id: number;
+            upgrade_name: UpgradeType;
+            upgrade_level: number;
+            upgrade_production: number;
+            buypower_cost: number;
+            player: number;
+        }>
+        (`select id, upgrade_name, upgrade_level, upgrade_production, 
+       buypower_cost, player 
+        from upgrades where player = $1 
+        order by id;`,
+            [playerId]
+    );
+        const upgrades:Upgrade[] = [];
+        for(const row of results.rows){
+            const upgradeType: UpgradeType = this.#toUpgradeType(row.upgrade_name);
+            upgrades.push(new Upgrade(upgradeType, row.upgrade_level, row.upgrade_production, row.buypower_cost))
+        }
+        this.#upgrades = upgrades;
+
+    }
+    static async getPlayerByAccount(username:string): Promise<Player | null>{
+        const results = await db().query<{
+            id: number;
+            playername: string;
+            buypower: number;
+            curr_click: number;
+            account: string;
+        }>
+        (`select id, playername, buypower, curr_click, account from player where account = $1;`,
+            [username]
+        );
+        const row = results.rows[0];
+        if(!row){
+            return null;
+        }
+        const player = new Player(row.playername);
+        player.#buyPower = row.buypower;
+        player.#currClick = row.curr_click;
+
+        await player.loadUpgrade(row.id);
+
+        player.#checkMoney();
+        player.#checkClick();
+
+        return player;
+
+    }
+    #toUpgradeType(name: string): UpgradeType {
+        switch (name) {
+            case UpgradeType.Employer:
+                return UpgradeType.Employer;
+
+            case UpgradeType.FinancialAdvisor:
+                return UpgradeType.FinancialAdvisor;
+
+            default:
+                throw new Error(`upgrade type is building: ${name}`);
+        }
     }
     get buyPower(): number {
         this.#checkMoney();

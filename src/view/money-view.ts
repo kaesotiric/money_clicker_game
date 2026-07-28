@@ -34,9 +34,9 @@ export default class MoneyView implements Listener {
                 <button id="purchase-upgrades">
                     Upgrade Store
                 </button>
-                <button id="create-account">
-                    Create Account test wil delete
-                </button>
+<!--                <button id="create-account">-->
+<!--                    Create Account test wil delete-->
+<!--                </button>-->
             </div>
             <br>
         `;

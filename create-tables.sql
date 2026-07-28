@@ -1,3 +1,4 @@
+
 -- Accounts
 create table if not exists account
 (
@@ -7,7 +8,7 @@ create table if not exists account
 
 create table if not exists player(
     id serial primary key,
-    name varchar(255) not null,
+    playername varchar(255) not null,
     buypower integer not null,
     curr_click integer not null,
     account varchar(255) not null unique,
@@ -19,8 +20,8 @@ create table if not exists upgrades(
     id serial primary key,
     upgrade_name varchar(255) not null,
     upgrade_level integer not null,
-    upgrade_production double not null,
-    buypower_cost double not null,
+    upgrade_production integer not null,
+    buypower_cost integer not null,
     player integer not null,
     foreign key (player) references player(id)
         on delete cascade
@@ -32,15 +33,25 @@ create table if not exists buildings(
     foreign key(id) references upgrades(id)
 
 );
+
+-- Add test accounts
 insert into account(username, password)
-values ('kate', 'testpass');
+values
+    ('kate', 'hashed_password_for_kate'),
+    ('alex', 'hashed_password_for_alex'),
+    ('sam', 'hashed_password_for_sam')
+    on conflict (username) do update
+                                  set password = excluded.password;
 
-insert into player(name, buypower, curr_click, account)
-values ('Kate', 1000, 20, 'kate');
--- insert into account(username, password) values('kate', 'testpass');
---     insert into player(buypower,curr_click, account) values(1000, 20, 'kate'));
--- insert into upgrades(upgrade_name, upgrade_level, upgrade_production, buypower_cost, player)
--- values ('Financial Advisor', 0, 15, 20, 1);
--- insert into buildings(id, interval_speed) values(34, 10);
-
+-- Add one player for each account
+insert into player(playername, buypower, curr_click, account)
+values
+    ('Kate', 1000, 20, 'kate'),
+    ('Alex', 500, 10, 'alex'),
+    ('Sam', 250, 5, 'sam')
+    on conflict (account) do update
+                                 set
+                                     playername = excluded.playername,
+                                 buypower = excluded.buypower,
+                                 curr_click = excluded.curr_click;
 
