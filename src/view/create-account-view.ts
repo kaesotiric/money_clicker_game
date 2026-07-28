@@ -29,7 +29,7 @@ export default class CreateAccountView implements Listener{
         
         <button id="login-button" type="button">
             Log In
-        </button>
+        </button> 
 
         <button id="create-button" type="button">
             Create Account
