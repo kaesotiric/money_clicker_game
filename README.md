@@ -11,6 +11,16 @@ and `Money` should increment by 1. Viewing available upgrades could be done by c
 From there, choose from two upgrades to purchase, `Financial Advisor` and `Employer`.
 Each upgrades cost more as the level increases, but so does the amount of money you make everytime you click! 
 ---
+# Phase 2 Design Submission 2
+---
+- Upgrade is the superclass of Building, while upgrade types such as Employer 
+- and FinancialAdvisor are represented as instances of Upgrade. A Building uses the same ID as an existing Upgrade, 
+- meaning every Building belongs to one Upgrade, but not every Upgrade is a Building. The direct player-building relationship was removed because 
+- Buildings already belong to a player through their related Upgrade
+- Unique IDs and relationship constraints were also added to keep the domain model consistent with the database
+
+- Updated flowchart and DDL to be more consistent with the domain model
+---
 # Phase 2 Design Changes
 ---
 - Created flowchart for sign in, create account and autoclicker 
