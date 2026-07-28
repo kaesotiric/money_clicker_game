@@ -13,7 +13,8 @@ class Player {
     - string name
     - double currClick
     - double clickBuyPower
-    - List~Upgrade~ upgrades 
+    - List~Upgrade~ upgrades
+    - List~Building~ buildings
     - ~Account account
     + click() void
     + calculateCurrClick(upgrades) double
@@ -73,11 +74,14 @@ class Player {
     Account "1" o--* "1" Player : account owns player
 %%    Player --> UpgradeType
     Upgrade --* UpgradeType
+    Player "1" o--* "*" Building
+    
 %%    Upgrade "1" o--* "1" Building
     
     
     class Building{
         - ~id integer
+        - Player player
         - intervalSpeed double
         + calculateProduction(level) * double 
         + calculateCost(level) * double

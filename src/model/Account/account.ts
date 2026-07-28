@@ -50,27 +50,6 @@ export default class Account {
         return allAccounts;
     }
 
-    // public static async createAccount(
-    //
-    //     username: string,
-    //     password: string
-    // ): Promise<Account> {
-    //     const results = await db().query<{ username: string }>(
-    //         `
-    //             INSERT INTO account(username, password)
-    //             VALUES ($1, $2)
-    //                 ON CONFLICT (username) DO NOTHING
-    //     RETURNING username;
-    //         `,
-    //         [username, password]
-    //     );
-    //
-    //     if (results.rows.length === 0) {
-    //         throw new DuplicateUserNameError();
-    //     }
-    //     console.log("test");
-    //     return new Account(username, password);
-    // }
     public static async createAccount(
         username: string,
         password: string
@@ -91,42 +70,8 @@ export default class Account {
 
         return new Account(username, password);
     }
-    // static async login( username: string, password: string): Promise<Account | null> {
-    //     const results = await db().query<{
-    //         username: string;
-    //         password: string;
-    //     }>(`select username, password from account where username = $1;`,
-    //         [username]
-    //     );
-    //
-    //     const row = results.rows[0];
-    //
-    //     if (!row) {
-    //         return null;
-    //     }
-    //
-    //     if (password !== row.password) {
-    //         return null;
-    //     }
-    //
-    //     const account = new Account(
-    //         row.username,
-    //         row.password
-    //     );
-    //
-    //     const loadedPlayer =
-    //         await Player.getPlayerByAccount(row.username);
-    //
-    //     if (loadedPlayer === null) {
-    //         throw new NoPLayerFoundError();
-    //
-    //     }
-    //
-    //     account.player = loadedPlayer;
-    //
-    //     return account;
-    // }
-    static async login(
+
+    static async login( // Remove logs later after done debugging
         username: string,
         password: string
     ): Promise<Account | null> {
