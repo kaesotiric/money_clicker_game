@@ -110,13 +110,14 @@ export default class CreateAccountView implements Listener{
         // this.#controller.createAccount(username, password);
 }
     showErrorMessage(): void {
-        const box =
-            this.#dialog.querySelector<HTMLDivElement>(
-                "#account-error"
-            )!;
+        alert("Incorrect username or password");
+        this.#dialog
+            .querySelector<HTMLInputElement>("#username")!
+            .value = "";
 
-        box.textContent = "Incorrect username or password";
-        box.hidden = false;
+        this.#dialog
+            .querySelector<HTMLInputElement>("#password")!
+            .value = "";
     }
     #clearErrorMessage(): void {
         const box =
@@ -126,6 +127,16 @@ export default class CreateAccountView implements Listener{
 
         box.textContent = "";
         box.hidden = true;
+    }
+    showDuplicateError():void{
+        alert("Username already exists, log in or use a different username");
+        this.#dialog
+            .querySelector<HTMLInputElement>("#username")!
+            .value = "";
+
+        this.#dialog
+            .querySelector<HTMLInputElement>("#password")!
+            .value = "";
     }
 
 

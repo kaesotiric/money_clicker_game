@@ -7,7 +7,8 @@ import CreateUpgradeView from "../view/create-upgrade-view.ts";
 import {UpgradeType} from "../model/UpgradeType.ts";
 // import db from "../model/connection.ts";
 import CreateAccountView from "../view/create-account-view.ts";
-import Account from "../model/account.ts";
+import Account from "../model/Account/account.ts";
+import DuplicateUserNameError from "../model/Account/DuplicateUserNameError.ts";
 
 export default class MoneyController {
 
@@ -65,9 +66,9 @@ export default class MoneyController {
 
             new MoneyView(this.#account.player, this);
         } catch (error) {
-            console.error(error);
-
-
+            if (error instanceof DuplicateUserNameError) {
+                this.#createAccountView?.showDuplicateError();
+            }
         }
     }
     async login(username: string, password: string): Promise<void> {

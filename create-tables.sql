@@ -23,14 +23,22 @@ create table if not exists upgrades(
     upgrade_production integer not null,
     buypower_cost integer not null,
     player integer not null,
+    foreign key(upgrade_name) references upgrade_type(name),
     foreign key (player) references player(id)
         on delete cascade
+);
+create table if not exists upgrade_type(
+    name varchart(255) primary key,
+    buypower_cost integer not null,
+    upgrade_production integer not null
 );
 
 create table if not exists buildings(
     id integer primary key,
     interval_speed integer not null,
+
     foreign key(id) references upgrades(id)
+
 
 );
 
@@ -54,4 +62,52 @@ values
                                      playername = excluded.playername,
                                  buypower = excluded.buypower,
                                  curr_click = excluded.curr_click;
+insert into upgrade_type(
+    name,
+    base_cost,
+    base_production
+)
+values
+    ('Financial Advisor', 50, 20),
+    ('Employer', 100, 20)
+    on conflict (name) do nothing;
 
+
+insert into upgrades(
+    upgrade_name,
+    upgrade_level,
+    upgrade_production,
+    buypower_cost,
+    player
+)
+select
+    upgrade_data.upgrade_name,
+    upgrade_data.upgrade_level,
+    upgrade_data.upgrade_production,
+    upgrade_data.buypower_cost,
+    player.id
+from (
+         values
+             ('kate', 'Financial Advisor', 2, 50, 50),
+             ('kate', 'Employer',          1, 20, 100),
+
+             ('alex', 'Financial Advisor', 3, 50, 50),
+             ('alex', 'Employer',          2, 20, 100),
+
+             ('sam',  'Financial Advisor', 1, 50, 50),
+             ('sam',  'Employer',          0, 20, 100)
+     ) as upgrade_data(
+                       account_username,
+                       upgrade_name,
+                       upgrade_level,
+                       upgrade_production,
+                       buypower_cost
+    )
+         join player
+              on player.account = upgrade_data.account_username
+
+    on conflict (player, upgrade_name) do update
+                                              set
+                                                  upgrade_level = excluded.upgrade_level,
+                                              upgrade_production = excluded.upgrade_production,
+                                              buypower_cost = excluded.buypower_cost;

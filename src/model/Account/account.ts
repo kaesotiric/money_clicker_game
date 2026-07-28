@@ -1,6 +1,7 @@
-import Player from "./player.ts";
-import db from "./connection.ts";
+import Player from "../player.ts";
+import db from "../connection.ts";
 import NoPLayerFoundError from "./NoPlayerFoundError.ts";
+import DuplicateUserNameError from "./DuplicateUserNameError.ts";
 // import type Player from "./player.ts";
 
 export default class Account {
@@ -25,13 +26,13 @@ export default class Account {
         const allAccounts: Account[] = [];
 
         for (const row of results.rows) {
-            // Constructor temporarily creates the default player.
+            // Constructor temporarily creates the default player
             const account = new Account(
                 row.username,
                 row.password
             );
 
-            // Load the actual saved player.
+            // Load the actual saved player
             const loadedPlayer =
                 await Player.getPlayerByAccount(row.username);
 
@@ -40,7 +41,7 @@ export default class Account {
 
             }
 
-            // Replace the temporary player with the saved player.
+            // Replace the temporary player with the saved player
             account.player = loadedPlayer;
 
             allAccounts.push(account);
@@ -50,10 +51,39 @@ export default class Account {
     }
 
     public static async createAccount(username: string, password: string): Promise<Account> {
-        const acc = new Account(username, password);
-        acc.#player = await Player.create(username);
+        const results = await db().query<{ username: string }>(
+            `
+        INSERT INTO account(username, password)
+        VALUES ($1, $2)
+        ON CONFLICT (username) DO NOTHING
+        RETURNING username;
+        `,
+            [username, password]
+        );
 
-    return acc;
+        if (results.rows.length === 0) { // No row was inserted because the username already exists
+            throw new DuplicateUserNameError();
+        }
+
+        const acc = new Account(username, password);
+        await Player.savePlayer(acc.player);
+
+        // Save the player created by the acc constructor
+        await db().query(
+            `
+        INSERT INTO player(
+            playername,
+            buypower,
+            curr_click,
+            account
+        )
+        VALUES ($1, $2, $3, $4);
+        `,
+            [username, 0, 1, username]
+        );
+
+
+        return acc;
     }
 
     static async login( username: string, password: string): Promise<Account | null> {
@@ -104,6 +134,9 @@ export default class Account {
     }
     set password(pass:string){
         this.#password = pass;
+    }
+    get username(): string {
+        return this.#username;
     }
 
 }

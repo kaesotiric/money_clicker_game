@@ -8,7 +8,7 @@ import type Listener from "./listener.ts";
 import Upgrade from "./upgrade.ts";
 import {UpgradeType} from "./UpgradeType.ts";
 import db from "./connection.ts";
-import type Account from "./account.ts";
+import type Account from "./Account/account.ts";
 
 export default class Player {
     #name: string;
@@ -50,7 +50,15 @@ export default class Player {
         // await player.loadBuilding();
         // return player;
     }
+     public static async savePlayer(player: Player): Promise<number>{
+        const results = await db().query<{id:number}>(
+            `insert into player(playername, buypower, currClick, account)
+         values($1, $2,$3, $4)`,
 
+        [player.#name, player.buyPower, player.#currClick]
+        );
+        return results.rows[0].id; // This will give the generated ID for upgrades
+     }
 
     public async loadUpgrade(playerId:number): Promise<void>{
         const results = await db().query<{
@@ -67,13 +75,41 @@ export default class Player {
         order by id;`,
             [playerId]
     );
-        const upgrades:Upgrade[] = [];
-        for(const row of results.rows){
-            const upgradeType: UpgradeType = this.#toUpgradeType(row.upgrade_name);
-            upgrades.push(new Upgrade(upgradeType, row.upgrade_level, row.upgrade_production, row.buypower_cost))
-        }
-        this.#upgrades = upgrades;
+        // const upgrades:Upgrade[] = this.#upgrades;
+        // for(const row of results.rows){
+        //     const upgradeType: UpgradeType = this.#toUpgradeType(row.upgrade_name);
+        //     upgrades.push(new Upgrade(upgradeType, row.upgrade_level, row.upgrade_production, row.buypower_cost))
+        //
+        //     }
+        //     // upgrades.push(new Upgrade(upgradeType, row.upgrade_level, row.upgrade_production, row.buypower_cost))
+        //
+        // this.#upgrades = upgrades;
 
+        const upgrades: Upgrade[] = this.#upgrades;
+
+        for (const row of results.rows) {
+            const upgradeType: UpgradeType =
+                this.#toUpgradeType(row.upgrade_name);
+
+            const index = upgrades.findIndex(
+                (upgrade) => upgrade.upgradeName === upgradeType
+            );
+
+            const loadedUpgrade = new Upgrade(
+                upgradeType,
+                row.upgrade_level,
+                row.upgrade_production,
+                row.buypower_cost
+            );
+
+            if (index >= 0) {
+                upgrades[index] = loadedUpgrade;
+            } else {
+                upgrades.push(loadedUpgrade);
+            }
+        }
+
+        this.#upgrades = upgrades;
     }
     static async getPlayerByAccount(username:string): Promise<Player | null>{
         const results = await db().query<{
@@ -102,6 +138,7 @@ export default class Player {
         return player;
 
     }
+
     #toUpgradeType(name: string): UpgradeType {
         switch (name) {
             case UpgradeType.Employer:
@@ -202,7 +239,6 @@ export default class Player {
             upgrade.updateBuyPowerCost();
 
             this.#currClick += upgrade.productionValue; // Update the exact upgrade that was clicked
-
             this.#checkMoney();
             this.#checkClick();
             this.#notifyAll();
