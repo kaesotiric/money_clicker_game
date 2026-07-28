@@ -43,10 +43,17 @@ create table if not exists upgrades
 
     foreign key (player)
     references player(id)
-    on delete cascade
+    on delete cascade,
+
+    unique (player, upgrade_name)
     );
 
+create unique index if not exists
+    upgrades_player_upgrade_name_unique
+    on upgrades(player, upgrade_name);
+
 -- BUILDINGS
+
 create table if not exists buildings
 (
     id integer primary key,
@@ -78,8 +85,8 @@ values
                                  curr_click = excluded.curr_click;
 insert into upgrade_type(
     name,
-    base_cost,
-    base_production
+    buypower_cost,
+    upgrade_production
 )
 values
     ('Financial Advisor', 50, 20),
