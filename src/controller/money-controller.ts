@@ -61,7 +61,7 @@ export default class MoneyController {
             const account = await Account.createAccount(username, password);
 
             this.#account = account;
-
+            console.log("creating account in controller test")
             this.#createAccountView?.close();
 
             new MoneyView(this.#account.player, this);
@@ -71,6 +71,39 @@ export default class MoneyController {
             }
         }
     }
+
+    // async createAccount(
+    //     username: string,
+    //     password: string
+    // ): Promise<void> {
+    //     try {
+    //         console.log("CONTROLLER STEP 1: Request received");
+    //
+    //         const account = await Account.createAccount(
+    //             username,
+    //             password
+    //         );
+    //
+    //         console.log("CONTROLLER STEP 2: Account received", account);
+    //
+    //         this.#account = account;
+    //         this.#createAccountView?.close();
+    //
+    //         console.log("CONTROLLER STEP 3: Account view closed");
+    //
+    //         new MoneyView(this.#account.player, this);
+    //
+    //         console.log("CONTROLLER STEP 4: MoneyView created");
+    //     } catch (error) {
+    //         console.error("CREATE ACCOUNT FAILED:", error);
+    //
+    //         if (error instanceof DuplicateUserNameError) {
+    //             this.#createAccountView?.showDuplicateError();
+    //         } else {
+    //             alert("Create account failed. Check the console.");
+    //         }
+    //     }
+    // }
     async login(username: string, password: string): Promise<void> {
         const account = await Account.login(username, password);
 
