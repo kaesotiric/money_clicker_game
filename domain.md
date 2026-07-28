@@ -72,7 +72,7 @@ class Player {
     Player "1" o--* "*" Upgrade
     Account "1" o--* "1" Player : account owns player
 %%    Player --> UpgradeType
-    Upgrade --> UpgradeType
+    Upgrade --* UpgradeType
 %%    Upgrade "1" o--* "1" Building
     
     
