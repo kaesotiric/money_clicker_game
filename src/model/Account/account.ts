@@ -81,7 +81,9 @@ export default class Account {
             [username, username]
         );
 
+
         const playerId = playerResult.rows[0].id;
+
 
         // Give the new player all upgrades at level 0
         await db().query(
@@ -103,7 +105,7 @@ export default class Account {
         `,
             [playerId]
         );
-
+        account.player.id = playerId;
         return account;
     }
 
@@ -172,6 +174,7 @@ export default class Account {
         }
         loadedPlayer.account = account;
         account.player = loadedPlayer;
+        await account.player.loadUpgrade();
 
 
         console.log("LOGIN 6: Loaded player added to account");

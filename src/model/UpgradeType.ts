@@ -1,4 +1,6 @@
 export enum UpgradeType {
     FinancialAdvisor = "Financial Advisor",
-    Employer = "Employer"
+    Employer = "Employer",
+    RoyalMint = "Royal Mint",
+    Banker = "Banker"
 }

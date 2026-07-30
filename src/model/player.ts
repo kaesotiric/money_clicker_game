@@ -12,6 +12,7 @@ import type Account from "./Account/account.ts";
 
 export default class Player {
     #name: string;
+    #id: number;
     #account: Account;
     #buyPower: number; // The current money or buy power the user has
     #currClick: number; // How much user earns per click
@@ -28,6 +29,13 @@ export default class Player {
         this.#notifyAll();
         this.#checkMoney();
         this.#checkClick();
+    }
+
+    get id(){
+        return this.#id;
+    }
+    set id(id: number){
+        this.#id = id;
     }
     //Write a class static method that will get access to all players in the database
     //returns all players in the database, it promises to contain an array of players
@@ -102,20 +110,20 @@ export default class Player {
         }
     }
 
-    public async loadUpgrade(playerId:number): Promise<void>{
+    public async loadUpgrade(): Promise<void>{
         const results = await db().query<{
             id: number;
             upgrade_name: UpgradeType;
             upgrade_level: number;
             upgrade_production: number;
             buypower_cost: number;
-            player: number;
+            player_id: number;
         }>
         (`select id, upgrade_name, upgrade_level, upgrade_production, 
-       buypower_cost, player 
-        from upgrades where player = $1 
-        order by id;`,
-            [playerId]
+        buypower_cost, player_id 
+        FROM upgrade_inventory  where player_id = $1 
+        ORDER by id;`,
+            [this.#id] // The player's ID that was generated when account was created
         );
         // const upgrades:Upgrade[] = this.#upgrades;
         // for(const row of results.rows){
@@ -169,29 +177,35 @@ export default class Player {
             return null;
         }
         const player = new Player(row.playername);
+        player.#id = row.id;
         player.#buyPower = row.buypower;
         player.#currClick = row.curr_click;
 
-        await player.loadUpgrade(row.id);
-
+        // await player.loadUpgrade(row.id);
+        await player.loadUpgrade();
         player.#checkMoney();
         player.#checkClick();
 
         return player;
 
     }
-
+    // Converts the string to enum
     #toUpgradeType(name: string): UpgradeType {
-        switch (name) {
-            case UpgradeType.Employer:
-                return UpgradeType.Employer;
+        let upgradeType: UpgradeType;
 
-            case UpgradeType.FinancialAdvisor:
-                return UpgradeType.FinancialAdvisor;
-
-            default:
-                throw new Error(`upgrade type is building: ${name}`);
+        if (name === "Financial Advisor") {
+            upgradeType = UpgradeType.FinancialAdvisor;
+        } else if (name === "Employer") {
+            upgradeType = UpgradeType.Employer;
+        } else if (name === "Royal Mint") {
+            upgradeType = UpgradeType.RoyalMint;
+        } else if (name === "Banker") {
+            upgradeType = UpgradeType.Banker;
+        } else {
+            throw new Error(`Unknown upgrade type: ${name}`);
         }
+
+        return upgradeType;
     }
     get buyPower(): number {
         this.#checkMoney();
