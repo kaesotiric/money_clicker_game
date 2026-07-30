@@ -50,7 +50,10 @@ export default class Account {
         return allAccounts;
     }
 
-    public static async createAccount(username: string, password: string): Promise<Account> {
+    public static async createAccount(
+        username: string,
+        password: string
+    ): Promise<Account> {
         const results = await db().query<{ username: string }>(
             `
         INSERT INTO account(username, password)
@@ -65,19 +68,43 @@ export default class Account {
             throw new DuplicateUserNameError();
         }
 
-        const account = new Account(username, password); // When account is created, it creates an instance of player aswell
+        // The constructor creates the Player object in memory
+        const account = new Account(username, password);
 
-        //It then inserts that player instance to the database
-
-        await db().query(
+        // Insert the Player and return its generated ID
+        const playerResult = await db().query<{ id: number }>(
             `
         INSERT INTO player(playername, account)
-        VALUES ($1, $2); 
-`,
-            [username, username] // account references using username
+        VALUES ($1, $2)
+        RETURNING id;
+        `,
+            [username, username]
         );
 
-        return account
+        const playerId = playerResult.rows[0].id;
+
+        // Give the new player all upgrades at level 0
+        await db().query(
+            `
+        INSERT INTO upgrade_inventory(
+            player_id,
+            upgrade_name,
+            upgrade_level,
+            upgrade_production,
+            buypower_cost
+        )
+        SELECT
+            $1,
+            name,
+            0,
+            base_production,
+            base_buypower_cost
+        FROM upgrade_catalog;
+        `,
+            [playerId]
+        );
+
+        return account;
     }
 
     static async login( // Remove logs later after done debugging
@@ -143,8 +170,9 @@ export default class Account {
 
             throw new NoPLayerFoundError();
         }
-
+        loadedPlayer.account = account;
         account.player = loadedPlayer;
+
 
         console.log("LOGIN 6: Loaded player added to account");
         console.log("LOGIN SUCCESS:", account);

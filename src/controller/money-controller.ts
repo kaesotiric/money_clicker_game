@@ -111,13 +111,34 @@ export default class MoneyController {
      * Handles the money button click from the view
      * Side effects: tells the player model to process the click
      */
-    handleClick(): void {
+    // async handleClick(): Promise<void> {
+    //     if (!this.#account) {
+    //         return;
+    //     }
+    //
+    //     const player = this.#account.player;
+    //
+    //     player.click();
+    //     await player.savePlayer();
+    // }
+    async handleClick(): Promise<void> {
         if (!this.#account) {
             return;
         }
 
-        this.#account.player.click();
+        try {
+            const player = this.#account.player;
 
+            player.click();
+
+            console.log("Buy power before saving:", player.buyPower);
+
+            await player.savePlayer();
+
+            console.log("Player successfully saved");
+        } catch (error) {
+            console.error("Could not save player:", error);
+        }
     }
 
     /**
@@ -150,19 +171,37 @@ export default class MoneyController {
         this.#createAccountView.show();
     }
 
-    /**
-     * Handles an upgrade purchase request from the view
-     * @param upgradeName the type of upgrade being purchased
-     * Side effects: tells the player model to attempt the purchase
-     */
-    purchaseUpgrade(upgradeName: UpgradeType) {
-        if (!this.#account) {
-            return;
+    // /**
+    //  * Handles an upgrade purchase request from the view
+    //  * @param upgradeName the type of upgrade being purchased
+    //  * Side effects: tells the player model to attempt the purchase
+    //  */
+    // async purchaseUpgrade(upgradeName: UpgradeType) {
+    //     if (!this.#account) {
+    //         return;
+    //     }
+    //
+    //     const purchasedUpgrade = this.#account.player.purchaseByName(upgradeName);
+    //     const playerId = await this.#account.player.savePlayer();
+    //     await this.#account.player.saveUpgrade(purchasedUpgrade, playerId);
+    //
+    //     }
+    async purchaseUpgrade(upgradeName: UpgradeType): Promise<void> {
+        if (this.#account) {
+            const player = this.#account.player;
+
+            const purchasedUpgrade =
+                player.purchaseByName(upgradeName);
+
+            if (purchasedUpgrade !== null) {
+                const playerId = await player.savePlayer();
+
+                await player.saveUpgrade(
+                    purchasedUpgrade,
+                    playerId
+                );
+            }
         }
-        this.#account.player.purchaseByName(upgradeName);
-
-
-        }
-
+    }
 
 }

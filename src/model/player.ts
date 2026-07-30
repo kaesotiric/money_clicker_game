@@ -50,25 +50,56 @@ export default class Player {
         // await player.loadBuilding();
         // return player;
     }
-    public static async savePlayer(player: Player): Promise<number>{
-        const results = await db().query<{id:number}>(
-            `update player
-            set playername, buypower, currClick, account)
-         values($1, $2,$3, $4)`,
-
-            [player.#name, player.buyPower, player.#currClick]
+    public async savePlayer(): Promise<number> {
+        const results = await db().query<{ id: number }>(
+            `
+                UPDATE player
+                SET
+                    buypower = $1,
+                    curr_click = $2
+                WHERE account = $3
+                    RETURNING id, buypower, curr_click;
+            `,
+            [
+                this.#buyPower,
+                this.#currClick,
+                this.#account.username
+            ]
         );
-        return results.rows[0].id; // This will give the generated ID for upgrades
+
+        if (results.rows.length === 0) {
+            throw new Error("Player was not found in the database.");
+        }
+
+        return results.rows[0].id;
     }
 
-    public static async saveUpgrades(upgrade: Upgrade, playerId: number): Promise<void>{
-        await db().query<{id:number}>(
-            `update upgrade
-            set upgrade_name, upgrade_level, upgrade_production, buypower_cost, player)
-         values($1, $2,$3, $4, $5)`,
-
-            [upgrade.upgradeName, upgrade.upgradeLevel,upgrade.productionValue, upgrade.buyPowerCost , playerId]
+    public async saveUpgrade(
+        upgrade: Upgrade,
+        playerId: number
+    ): Promise<void> {
+        const results = await db().query(
+            `
+        UPDATE upgrade_inventory
+        SET
+            upgrade_level = $1,
+            upgrade_production = $2,
+            buypower_cost = $3
+        WHERE player_id = $4
+          AND upgrade_name = $5;
+        `,
+            [
+                upgrade.upgradeLevel,
+                upgrade.productionValue,
+                upgrade.buyPowerCost,
+                playerId,
+                upgrade.upgradeName
+            ]
         );
+
+        if (results.affectedRows === 0) {
+            throw new Error("Upgrade was not found in the player's inventory.");
+        }
     }
 
     public async loadUpgrade(playerId:number): Promise<void>{
@@ -232,31 +263,53 @@ export default class Player {
         return price;
     }
 
-    /**
-     * Attempts to purchase the specified upgrade
-     * @param upgrade upgrade being purchased
-     * Postcondition: if the player has enough buy power, the cost is removed,
-     * the upgrade level increases and currClick increases
-     * If the player cannot afford it, nothing changes
-     * Side effects: can change buyPower, currClick, upgrade level and upgrade cost
-     */
-    #purchaseUpgrade(upgrade: Upgrade): void {
-        this.#checkMoney();
+
+    #purchaseUpgrade(upgrade: Upgrade): boolean {
+        let purchaseSuccessful = false;
         const cost = upgrade.buyPowerCost;
 
         if (this.#buyPower >= cost) {
             this.#buyPower -= cost;
+
             upgrade.increaseLevel();
             upgrade.updateBuyPowerCost();
 
-            this.#currClick += upgrade.productionValue; // Update the exact upgrade that was clicked
+            this.#currClick += upgrade.productionValue;
+
             this.#checkMoney();
             this.#checkClick();
             this.#notifyAll();
 
+            purchaseSuccessful = true;
         }
 
+        return purchaseSuccessful;
     }
+    // /**
+    //  * Attempts to purchase the specified upgrade
+    //  * @param upgrade upgrade being purchased
+    //  * Postcondition: if the player has enough buy power, the cost is removed,
+    //  * the upgrade level increases and currClick increases
+    //  * If the player cannot afford it, nothing changes
+    //  * Side effects: can change buyPower, currClick, upgrade level and upgrade cost
+    //  */
+    // #purchaseUpgrade(upgrade: Upgrade): boolean {
+    //     this.#checkMoney();
+    //     const cost = upgrade.buyPowerCost;
+    //
+    //     if (this.#buyPower >= cost) {
+    //         this.#buyPower -= cost;
+    //         upgrade.increaseLevel();
+    //         upgrade.updateBuyPowerCost();
+    //
+    //         this.#currClick += upgrade.productionValue; // Update the exact upgrade that was clicked
+    //         this.#checkMoney();
+    //         this.#checkClick();
+    //         this.#notifyAll();
+    //
+    //     }
+    //
+    // }
 
     /**
      * Adds all available upgrades to the player's upgrade list
@@ -280,24 +333,48 @@ export default class Player {
         return new Upgrade(UpgradeType.Employer, 0, 0, 0); // no value
     }
 
-    /**
-     * Attempts to purchase an upgrade using its type
-     * @param type the type of upgrade being purchased
-     * Must be a valid UpgradeType
-     * Side effects: may change buyPower, currClick, upgrade level and upgrade cost
-     */
-    purchaseByName(type: UpgradeType): Upgrade | null{
+    public purchaseByName(type: UpgradeType): Upgrade | null {
         let purchasedUpgrade: Upgrade | null = null;
-        // if(this.#upgrades.upgradeName === type)
-        // if (this.#upgrades.length >= 1) {
-        for (let i = 0; i < this.#upgrades.length; i++) {
+        let found = false;
+
+        for (
+            let i = 0;
+            i < this.#upgrades.length && !found;
+            i++
+        ) {
             if (this.#upgrades[i].upgradeName === type) {
-                this.#purchaseUpgrade(this.#upgrades[i]); // This will check first if player has enough money
-                purchasedUpgrade = this.#upgrades[i];
+                found = true;
+
+                const purchaseSuccessful =
+                    this.#purchaseUpgrade(this.#upgrades[i]);
+
+                if (purchaseSuccessful) {
+                    purchasedUpgrade = this.#upgrades[i];
+                }
             }
         }
+
         return purchasedUpgrade;
     }
+
+    // /**
+    //  * Attempts to purchase an upgrade using its type
+    //  * @param type the type of upgrade being purchased
+    //  * Must be a valid UpgradeType
+    //  * Side effects: may change buyPower, currClick, upgrade level and upgrade cost
+    //  */
+    // purchaseByName(type: UpgradeType): Upgrade | null{
+    //     let purchasedUpgrade: Upgrade | null = null;
+    //     // if(this.#upgrades.upgradeName === type)
+    //     // if (this.#upgrades.length >= 1) {
+    //     for (let i = 0; i < this.#upgrades.length; i++) {
+    //         if (this.#upgrades[i].upgradeName === type) {
+    //             this.#purchaseUpgrade(this.#upgrades[i]); // This will check first if player has enough money
+    //             purchasedUpgrade = this.#upgrades[i];
+    //         }
+    //     }
+    //     return purchasedUpgrade;
+    // }
 
     registerListener(listener: Listener): void {
         this.#listeners.push(listener);
