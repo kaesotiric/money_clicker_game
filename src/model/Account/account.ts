@@ -50,10 +50,7 @@ export default class Account {
         return allAccounts;
     }
 
-    public static async createAccount(
-        username: string,
-        password: string
-    ): Promise<Account> {
+    public static async createAccount(username: string, password: string): Promise<Account> {
         const results = await db().query<{ username: string }>(
             `
         INSERT INTO account(username, password)
@@ -68,7 +65,19 @@ export default class Account {
             throw new DuplicateUserNameError();
         }
 
-        return new Account(username, password);
+        const account = new Account(username, password); // When account is created, it creates an instance of player aswell
+
+        //It then inserts that player instance to the database
+
+        await db().query(
+            `
+        INSERT INTO player(playername, account)
+        VALUES ($1, $2); 
+`,
+            [username, username] // account references using username
+        );
+
+        return account
     }
 
     static async login( // Remove logs later after done debugging

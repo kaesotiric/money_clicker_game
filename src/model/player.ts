@@ -52,12 +52,23 @@ export default class Player {
     }
     public static async savePlayer(player: Player): Promise<number>{
         const results = await db().query<{id:number}>(
-            `insert into player(playername, buypower, currClick, account)
+            `update player
+            set playername, buypower, currClick, account)
          values($1, $2,$3, $4)`,
 
             [player.#name, player.buyPower, player.#currClick]
         );
         return results.rows[0].id; // This will give the generated ID for upgrades
+    }
+
+    public static async saveUpgrades(upgrade: Upgrade, playerId: number): Promise<void>{
+        await db().query<{id:number}>(
+            `update upgrade
+            set upgrade_name, upgrade_level, upgrade_production, buypower_cost, player)
+         values($1, $2,$3, $4, $5)`,
+
+            [upgrade.upgradeName, upgrade.upgradeLevel,upgrade.productionValue, upgrade.buyPowerCost , playerId]
+        );
     }
 
     public async loadUpgrade(playerId:number): Promise<void>{
@@ -275,14 +286,17 @@ export default class Player {
      * Must be a valid UpgradeType
      * Side effects: may change buyPower, currClick, upgrade level and upgrade cost
      */
-    purchaseByName(type: UpgradeType): void {
+    purchaseByName(type: UpgradeType): Upgrade | null{
+        let purchasedUpgrade: Upgrade | null = null;
         // if(this.#upgrades.upgradeName === type)
         // if (this.#upgrades.length >= 1) {
         for (let i = 0; i < this.#upgrades.length; i++) {
             if (this.#upgrades[i].upgradeName === type) {
                 this.#purchaseUpgrade(this.#upgrades[i]); // This will check first if player has enough money
+                purchasedUpgrade = this.#upgrades[i];
             }
         }
+        return purchasedUpgrade;
     }
 
     registerListener(listener: Listener): void {

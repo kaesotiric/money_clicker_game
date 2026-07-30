@@ -43,19 +43,7 @@ export default class MoneyController {
         //     }
         // });
     }
-    // async #loadAccount(): Promise<void>{
-    //     const allAccounts: Account[] = await Account.getAllAccounts();
-    //     if (allAccounts.length === 0) {
-    //         this.#createAccountView = new CreateAccountView(this);
-    //         this.#createAccountView.show();
-    //         return; // Return when there is no acc to load
-    //     }
-    //     this.#account = allAccounts[0];
-    //     // this.#createAccountView = new CreateAccountView(this);
-    //     // this.#createAccountView.show();
-    //
-    //     new MoneyView(this.#account.player, this);
-    // }
+
     async createAccount(username: string, password: string): Promise<void> {
         try {
             const account = await Account.createAccount(username, password);

@@ -1,8 +1,9 @@
+
 -- ACCOUNT
 create table if not exists account
 (
     username varchar(255) primary key,
-    password varchar(255) not null,
+    password varchar(255) not null
 
 );
 -- PLAYER
@@ -50,3 +51,6 @@ create table if not exists buildings
     references upgrades(id)
     on delete cascade
     );
+
+
+-- kate  hashed_password_for_kate
