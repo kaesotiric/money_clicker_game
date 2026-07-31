@@ -182,16 +182,6 @@ export default class Building extends Upgrade {
         addBuyPower(amount);
     }
 
-    // public stopAutoClicker(): void {
-    //     if (this.#autoClickTimer !== undefined) {
-    //         globalThis.clearInterval(
-    //             this.#autoClickTimer
-    //         );
-    //
-    //         this.#autoClickTimer = undefined;
-    //     }
-    // }
-
     get intervalSpeed(): number {
         return this.#intervalSpeed;
     }

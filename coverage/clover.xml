@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1785534549818" clover="3.2.0">
-  <project timestamp="1785534549818" name="All files">
+<coverage generated="1785536289379" clover="3.2.0">
+  <project timestamp="1785536289379" name="All files">
     <metrics statements="221" coveredstatements="117" conditionals="60" coveredconditionals="25" methods="59" coveredmethods="30" elements="340" coveredelements="172" complexity="0" loc="221" ncloc="221" packages="3" files="10" classes="10"/>
     <package name="src">
       <metrics statements="3" coveredstatements="1" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="1"/>
-      <file name="assertions.ts" path="/Users/katenabo/Downloads/money_clicker/src/assertions.ts">
+      <file name="assertions.ts" path="C:\Users\katen\Downloads\cookie_clicker\src\assertions.ts">
         <metrics statements="3" coveredstatements="1" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="1"/>
         <line num="2" count="158" type="cond" truecount="1" falsecount="1"/>
         <line num="3" count="0" type="stmt"/>
@@ -13,7 +13,7 @@
     </package>
     <package name="src.model">
       <metrics statements="214" coveredstatements="116" conditionals="58" coveredconditionals="24" methods="53" coveredmethods="29"/>
-      <file name="UpgradeType.ts" path="/Users/katenabo/Downloads/money_clicker/src/model/UpgradeType.ts">
+      <file name="UpgradeType.ts" path="C:\Users\katen\Downloads\cookie_clicker\src\model\UpgradeType.ts">
         <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
         <line num="1" count="3" type="stmt"/>
         <line num="2" count="3" type="stmt"/>
@@ -21,7 +21,7 @@
         <line num="4" count="3" type="stmt"/>
         <line num="5" count="3" type="stmt"/>
       </file>
-      <file name="building.ts" path="/Users/katenabo/Downloads/money_clicker/src/model/building.ts">
+      <file name="building.ts" path="C:\Users\katen\Downloads\cookie_clicker\src\model\building.ts">
         <metrics statements="9" coveredstatements="8" conditionals="4" coveredconditionals="4" methods="5" coveredmethods="4"/>
         <line num="151" count="10" type="stmt"/>
         <line num="158" count="10" type="stmt"/>
@@ -33,14 +33,14 @@
         <line num="182" count="4" type="stmt"/>
         <line num="196" count="0" type="stmt"/>
       </file>
-      <file name="connection.ts" path="/Users/katenabo/Downloads/money_clicker/src/model/connection.ts">
+      <file name="connection.ts" path="C:\Users\katen\Downloads\cookie_clicker\src\model\connection.ts">
         <metrics statements="4" coveredstatements="2" conditionals="2" coveredconditionals="1" methods="1" coveredmethods="0"/>
-        <line num="13" count="2" type="cond" truecount="1" falsecount="1"/>
-        <line num="15" count="2" type="stmt"/>
-        <line num="18" count="0" type="stmt"/>
-        <line num="22" count="0" type="stmt"/>
+        <line num="5" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="7" count="2" type="stmt"/>
+        <line num="9" count="0" type="stmt"/>
+        <line num="13" count="0" type="stmt"/>
       </file>
-      <file name="player.ts" path="/Users/katenabo/Downloads/money_clicker/src/model/player.ts">
+      <file name="player.ts" path="C:\Users\katen\Downloads\cookie_clicker\src\model\player.ts">
         <metrics statements="176" coveredstatements="81" conditionals="52" coveredconditionals="19" methods="36" coveredmethods="14"/>
         <line num="20" count="4" type="stmt"/>
         <line num="21" count="4" type="stmt"/>
@@ -219,7 +219,7 @@
         <line num="659" count="27" type="stmt"/>
         <line num="663" count="9" type="stmt"/>
       </file>
-      <file name="upgrade.ts" path="/Users/katenabo/Downloads/money_clicker/src/model/upgrade.ts">
+      <file name="upgrade.ts" path="C:\Users\katen\Downloads\cookie_clicker\src\model\upgrade.ts">
         <metrics statements="20" coveredstatements="20" conditionals="0" coveredconditionals="0" methods="10" coveredmethods="10"/>
         <line num="17" count="23" type="stmt"/>
         <line num="18" count="23" type="stmt"/>
@@ -243,21 +243,21 @@
         <line num="85" count="38" type="stmt"/>
       </file>
     </package>
-    <package name="src.model.Account">
+    <package name="src.model.ErrorMethods">
       <metrics statements="4" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="0"/>
-      <file name="NoAccountFoundError.ts" path="/Users/katenabo/Downloads/money_clicker/src/model/Account/NoAccountFoundError.ts">
+      <file name="NoAccountFoundError.ts" path="C:\Users\katen\Downloads\cookie_clicker\src\model\ErrorMethods\NoAccountFoundError.ts">
         <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
         <line num="3" count="0" type="stmt"/>
       </file>
-      <file name="NoPlayerFoundError.ts" path="/Users/katenabo/Downloads/money_clicker/src/model/Account/NoPlayerFoundError.ts">
+      <file name="NoPlayerFoundError.ts" path="C:\Users\katen\Downloads\cookie_clicker\src\model\ErrorMethods\NoPlayerFoundError.ts">
         <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
         <line num="3" count="0" type="stmt"/>
       </file>
-      <file name="PlayerIDNotFoundError.ts" path="/Users/katenabo/Downloads/money_clicker/src/model/Account/PlayerIDNotFoundError.ts">
+      <file name="PlayerIDNotFoundError.ts" path="C:\Users\katen\Downloads\cookie_clicker\src\model\ErrorMethods\PlayerIDNotFoundError.ts">
         <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
         <line num="3" count="0" type="stmt"/>
       </file>
-      <file name="UnknownUpgradeTypeError.ts" path="/Users/katenabo/Downloads/money_clicker/src/model/Account/UnknownUpgradeTypeError.ts">
+      <file name="UnknownUpgradeTypeError.ts" path="C:\Users\katen\Downloads\cookie_clicker\src\model\ErrorMethods\UnknownUpgradeTypeError.ts">
         <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
         <line num="3" count="0" type="stmt"/>
       </file>
