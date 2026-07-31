@@ -2,7 +2,7 @@
  * Represents the player in the game
  * Stores the player's buy power, click amount and upgrades
  */
-
+//Need to move methods
 import assert from "../assertions.ts";
 import type Listener from "./listener.ts";
 import Upgrade from "./upgrade.ts";
@@ -647,6 +647,37 @@ export default class Player {
     //     return purchasedUpgrade;
     // }
 
+
+    set buyPower(value: number) {
+        this.#buyPower = value;
+        this.#checkMoney();
+    }
+
+    get currClick(): number {
+        this.#checkClick();
+        return this.#currClick;
+    }
+
+    set currClick(value: number) {
+        this.#currClick = value;
+        this.#checkClick();
+    }
+
+    get upgrades(): ReadonlyArray<Upgrade> {
+        return this.#upgrades;
+    }
+
+    set upgrades(upgrades: Array<Upgrade>) {
+        this.#upgrades = upgrades;
+    }
+
+    get buildings(): ReadonlyArray<Building> {
+        return this.#buildings;
+    }
+
+    set buildings(buildings: Array<Building>) {
+        this.#buildings = buildings;
+    }
     registerListener(listener: Listener): void {
         this.#listeners.push(listener);
     }
