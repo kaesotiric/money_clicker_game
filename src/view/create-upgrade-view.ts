@@ -41,6 +41,22 @@ export default class CreateUpgradeView implements Listener{
             <span>Price: <span id="employer-price">100</span></span>
 
             <br><br>
+            
+            <button id="purchase-mint">
+                Buy Royal Mint
+            </button>
+             <span>Level: <span id="mint-level"></span></span>
+            <span>Price: <span id="mint-price"></span></span>
+
+            <br><br>
+            
+            <button id="purchase-banker">
+                Buy Banker
+            </button>
+             <span>Level: <span id="banker-level"></span></span>
+            <span>Price: <span id="banker-price"></span></span>
+
+            <br><br>
 
             <button id="close-store">
                 Exit
@@ -64,6 +80,16 @@ export default class CreateUpgradeView implements Listener{
             .querySelector<HTMLButtonElement>("#purchase-employer")!
             .addEventListener("click", () => {
                 this.#controller.purchaseUpgrade(UpgradeType.Employer);
+            });
+        this.#dialog
+            .querySelector<HTMLButtonElement>("#purchase-banker")!
+            .addEventListener("click", () => {
+                this.#controller.purchaseBuilding(UpgradeType.Banker);
+            });
+        this.#dialog
+            .querySelector<HTMLButtonElement>("#purchase-mint")!
+            .addEventListener("click", () => {
+                this.#controller.purchaseBuilding(UpgradeType.RoyalMint);
             });
     }
     /**
@@ -91,6 +117,10 @@ export default class CreateUpgradeView implements Listener{
             .textContent = this.#player.findUpgradeLevel(UpgradeType.FinancialAdvisor).toString();
         this.#dialog.querySelector<HTMLSpanElement>("#employer-level")!
             .textContent = this.#player.findUpgradeLevel(UpgradeType.Employer).toString();
+        this.#dialog.querySelector<HTMLSpanElement>("#banker-level")!
+            .textContent = this.#player.findUpgradeLevel(UpgradeType.Banker).toString();
+        this.#dialog.querySelector<HTMLSpanElement>("#mint-level")!
+            .textContent = this.#player.findUpgradeLevel(UpgradeType.RoyalMint).toString();
     }
     /**
      * Updates the displayed prices using the current upgrade prices from the player model
@@ -101,6 +131,10 @@ export default class CreateUpgradeView implements Listener{
             .textContent = this.#player.findPrice(UpgradeType.FinancialAdvisor).toString();
         this.#dialog.querySelector<HTMLSpanElement>("#employer-price")!
             .textContent = this.#player.findPrice(UpgradeType.Employer).toString();
+        this.#dialog.querySelector<HTMLSpanElement>("#banker-price")!
+            .textContent = this.#player.findPrice(UpgradeType.Banker).toString();
+        this.#dialog.querySelector<HTMLSpanElement>("#mint-price")!
+            .textContent = this.#player.findPrice(UpgradeType.RoyalMint).toString();
     }
 
 }

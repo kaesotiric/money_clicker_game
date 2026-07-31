@@ -18,6 +18,7 @@ export default class MoneyController {
     #createUpgradeView?: CreateUpgradeView;
 
     constructor() {
+
         this.#createAccountView = new CreateAccountView(this);
         this.#createAccountView.show();
         // void this.#loadAccount();
@@ -201,6 +202,11 @@ export default class MoneyController {
                     playerId
                 );
             }
+        }
+    }
+    public purchaseBuilding(type: UpgradeType): void {
+        if (this.#account !== undefined) {
+            this.#account.player.purchaseBuilding(type);
         }
     }
 

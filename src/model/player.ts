@@ -9,6 +9,7 @@ import Upgrade from "./upgrade.ts";
 import {UpgradeType} from "./UpgradeType.ts";
 import db from "./connection.ts";
 import type Account from "./Account/account.ts";
+import Building from "./building.ts";
 
 export default class Player {
     #name: string;
@@ -17,6 +18,7 @@ export default class Player {
     #buyPower: number; // The current money or buy power the user has
     #currClick: number; // How much user earns per click
     #upgrades: Array<Upgrade>; // List of upgrades the user has
+    #buildings: Array<Building>; // List of buildings the user has
     #listeners: Array<Listener>;
 
     constructor(name: string) {
@@ -24,11 +26,27 @@ export default class Player {
         this.#currClick = 1;
         this.#buyPower = 0;
         this.#upgrades = new Array<Upgrade>();
+        this.#buildings = new Array<Building>();
         this.#listeners = new Array<Listener>();
         this.#fillArray(); // Initializes the player with all available upgrades at level 0
         this.#notifyAll();
         this.#checkMoney();
         this.#checkClick();
+    }
+
+    public startBuildingAutoClickers(): void {
+        for (let i = 0; i < this.#buildings.length; i++) {
+            const building = this.#buildings[i];
+
+            building.startAutoClicker(
+                (amount: number) => {
+                    this.#buyPower += amount;
+
+                    this.#checkMoney();
+                    this.#notifyAll();
+                }
+            );
+        }
     }
 
     get id(){
@@ -109,6 +127,59 @@ export default class Player {
             throw new Error("Upgrade was not found in the player's inventory.");
         }
     }
+    public async saveBuilding(
+        building: Building,
+        playerId: number
+    ): Promise<void> {
+        const upgradeResult = await db().query(
+            `
+                UPDATE upgrade_inventory
+                SET
+                    upgrade_level = $1,
+                    upgrade_production = $2,
+                    buypower_cost = $3
+                WHERE player_id = $4
+                  AND upgrade_name = $5;
+            `,
+            [
+                building.upgradeLevel,
+                building.productionValue,
+                building.buyPowerCost,
+                playerId,
+                building.upgradeName
+            ]
+        );
+
+        if (upgradeResult.affectedRows === 0) {
+            throw new Error(
+                "Upgrade was not found in the player's inventory."
+            );
+        }
+
+        const buildingResult = await db().query(
+            `
+        UPDATE buildings
+        SET interval_speed = $1
+        WHERE upgrade_id = (
+            SELECT id
+            FROM upgrade_inventory
+            WHERE player_id = $2
+              AND upgrade_name = $3
+        );
+        `,
+            [
+                building.intervalSpeed,
+                playerId,
+                building.upgradeName
+            ]
+        );
+
+        if (buildingResult.affectedRows === 0) {
+            throw new Error(
+                "Building was not found in the buildings table."
+            );
+        }
+    }
 
     public async loadUpgrade(): Promise<void>{
         const results = await db().query<{
@@ -161,6 +232,70 @@ export default class Player {
 
         this.#upgrades = upgrades;
     }
+
+    public async loadBuildings(): Promise<void> {
+        const results = await db().query<{
+            id: number;
+            upgrade_name: UpgradeType;
+            upgrade_level: number;
+            upgrade_production: number;
+            buypower_cost: number;
+            player_id: number;
+            interval_speed: number;
+        }>(
+            `
+        SELECT
+            id,
+            upgrade_name,
+            upgrade_level,
+            upgrade_production,
+            buypower_cost,
+            player_id,
+            (
+                SELECT interval_speed
+                FROM buildings
+                WHERE buildings.upgrade_id = upgrade_inventory.id
+            ) AS interval_speed
+        FROM upgrade_inventory
+        WHERE player_id = $1
+          AND id IN (
+              SELECT upgrade_id
+              FROM buildings
+          )
+        ORDER BY id;
+        `,
+            [this.#id]
+        );
+
+        const buildings: Building[] = this.#buildings;
+
+        for (const row of results.rows) {
+            const upgradeType: UpgradeType =
+                this.#toUpgradeType(row.upgrade_name);
+
+            const index = buildings.findIndex(
+                (building) =>
+                    building.upgradeName === upgradeType
+            );
+
+            const loadedBuilding = new Building(
+                upgradeType,
+                row.upgrade_level,
+                row.upgrade_production,
+                row.buypower_cost,
+                row.interval_speed
+            );
+
+            if (index >= 0) {
+                buildings[index] = loadedBuilding;
+            } else {
+                buildings.push(loadedBuilding);
+            }
+        }
+
+        this.#buildings = buildings;
+    }
+
     static async getPlayerByAccount(username:string): Promise<Player | null>{
         const results = await db().query<{
             id: number;
@@ -183,6 +318,10 @@ export default class Player {
 
         // await player.loadUpgrade(row.id);
         await player.loadUpgrade();
+        await player.loadBuildings();
+        // Restarts buildings that were already purchased.
+        player.startBuildingAutoClickers();
+
         player.#checkMoney();
         player.#checkClick();
 
@@ -250,13 +389,33 @@ export default class Player {
      *         matching upgrade is found.
      * Postcondition: the player's state is unchanged.
      */
+    // findUpgradeLevel(type: UpgradeType): number {
+    //     let level = 0;
+    //     for (let i = 0; i < this.#upgrades.length; i++) {
+    //         if (this.#upgrades[i].upgradeName === type) {
+    //             level = this.#upgrades[i].upgradeLevel;
+    //         }
+    //     }
+    //     return level;
+    // }
+
     findUpgradeLevel(type: UpgradeType): number {
         let level = 0;
+
+        // Check the regular upgrades
         for (let i = 0; i < this.#upgrades.length; i++) {
             if (this.#upgrades[i].upgradeName === type) {
                 level = this.#upgrades[i].upgradeLevel;
             }
         }
+
+        // Check the buildings
+        for (let i = 0; i < this.#buildings.length; i++) {
+            if (this.#buildings[i].upgradeName === type) {
+                level = this.#buildings[i].upgradeLevel;
+            }
+        }
+
         return level;
     }
 
@@ -267,13 +426,33 @@ export default class Player {
      * @return the current price of the matching upgrade, or 0 if no matching upgrade is found
      * Postcondition: the player's state is unchanged
      */
+    // findPrice(type: UpgradeType): number {
+    //     let price = 0;
+    //     for (let i = 0; i < this.#upgrades.length; i++) {
+    //         if (this.#upgrades[i].upgradeName === type) {
+    //             price = this.#upgrades[i].buyPowerCost;
+    //         }
+    //     }
+    //     return price;
+    // }
+
     findPrice(type: UpgradeType): number {
         let price = 0;
+
+        // Check regular upgrades
         for (let i = 0; i < this.#upgrades.length; i++) {
             if (this.#upgrades[i].upgradeName === type) {
                 price = this.#upgrades[i].buyPowerCost;
             }
         }
+
+        // Check buildings
+        for (let i = 0; i < this.#buildings.length; i++) {
+            if (this.#buildings[i].upgradeName === type) {
+                price = this.#buildings[i].buyPowerCost;
+            }
+        }
+
         return price;
     }
 
@@ -287,8 +466,15 @@ export default class Player {
 
             upgrade.increaseLevel();
             upgrade.updateBuyPowerCost();
+             if (upgrade instanceof Building) {
+                upgrade.startAutoClicker((amount: number) => {
+                    this.#buyPower += amount;
+                    this.#notifyAll();
+                });
+            }else { // If it's a regular upgrade
+                 this.#currClick += upgrade.productionValue;
+             }
 
-            this.#currClick += upgrade.productionValue;
 
             this.#checkMoney();
             this.#checkClick();
@@ -299,31 +485,6 @@ export default class Player {
 
         return purchaseSuccessful;
     }
-    // /**
-    //  * Attempts to purchase the specified upgrade
-    //  * @param upgrade upgrade being purchased
-    //  * Postcondition: if the player has enough buy power, the cost is removed,
-    //  * the upgrade level increases and currClick increases
-    //  * If the player cannot afford it, nothing changes
-    //  * Side effects: can change buyPower, currClick, upgrade level and upgrade cost
-    //  */
-    // #purchaseUpgrade(upgrade: Upgrade): boolean {
-    //     this.#checkMoney();
-    //     const cost = upgrade.buyPowerCost;
-    //
-    //     if (this.#buyPower >= cost) {
-    //         this.#buyPower -= cost;
-    //         upgrade.increaseLevel();
-    //         upgrade.updateBuyPowerCost();
-    //
-    //         this.#currClick += upgrade.productionValue; // Update the exact upgrade that was clicked
-    //         this.#checkMoney();
-    //         this.#checkClick();
-    //         this.#notifyAll();
-    //
-    //     }
-    //
-    // }
 
     /**
      * Adds all available upgrades to the player's upgrade list
@@ -369,6 +530,36 @@ export default class Player {
         }
 
         return purchasedUpgrade;
+    }
+    public purchaseBuilding(type: UpgradeType): void {
+        for (let i = 0; i < this.#buildings.length; i++) {
+            const building = this.#buildings[i];
+
+            if (building.upgradeName === type) {
+                if (this.#buyPower >= building.buyPowerCost) {
+                    this.#buyPower -= building.buyPowerCost;
+
+                    building.increaseLevel();
+
+                    building.startAutoClicker(
+                        (amount: number) => {
+                            this.#buyPower += amount;
+
+                            this.#checkMoney();
+                            this.#notifyAll();
+                        }
+                    );
+
+                    this.#notifyAll();
+                }
+            }
+        }
+    }
+    #addAutomaticBuyPower(amount: number): void {
+        this.#buyPower += amount;
+
+        this.#checkMoney();
+        this.#notifyAll();
     }
 
     // /**

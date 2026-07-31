@@ -50,13 +50,17 @@ export default class Account {
         return allAccounts;
     }
 
+
     public static async createAccount(
         username: string,
         password: string
     ): Promise<Account> {
         const results = await db().query<{ username: string }>(
             `
-        INSERT INTO account(username, password)
+        INSERT INTO account (
+            username,
+            password
+        )
         VALUES ($1, $2)
         ON CONFLICT (username) DO NOTHING
         RETURNING username;
@@ -71,44 +75,75 @@ export default class Account {
         // The constructor creates the Player object in memory
         const account = new Account(username, password);
 
-        // Insert the Player and return its generated ID
+        // Insert the player and return its generated ID
         const playerResult = await db().query<{ id: number }>(
             `
-        INSERT INTO player(playername, account)
+        INSERT INTO player (
+            playername,
+            account
+        )
         VALUES ($1, $2)
         RETURNING id;
         `,
             [username, username]
         );
 
-
         const playerId = playerResult.rows[0].id;
 
-
-        // Give the new player all upgrades at level 0
         await db().query(
             `
-        INSERT INTO upgrade_inventory(
-            player_id,
-            upgrade_name,
-            upgrade_level,
-            upgrade_production,
-            buypower_cost
-        )
-        SELECT
-            $1,
-            name,
-            0,
-            base_production,
-            base_buypower_cost
-        FROM upgrade_catalog;
-        `,
+    INSERT INTO upgrade_inventory (
+        player_id,
+        upgrade_name,
+        upgrade_level,
+        upgrade_production,
+        buypower_cost
+    )
+    SELECT
+        $1,
+        name,
+        0,
+        base_production,
+        base_buypower_cost
+    FROM upgrade_catalog;
+    `,
             [playerId]
         );
+
+        await this.initializeBuildings(playerId); // Give the player's building upgrades their building information
+
         account.player.id = playerId;
+
         return account;
     }
-
+    static async initializeBuildings(playerId: number){
+        // Give the player's building upgrades their building information
+        await db().query(
+            `
+    INSERT INTO buildings (
+        upgrade_id,
+        interval_speed
+    )
+    SELECT
+        upgrade_inventory.id,
+        (
+            SELECT base_interval_speed
+            FROM upgrade_catalog
+            WHERE name = upgrade_inventory.upgrade_name
+        )
+    FROM upgrade_inventory
+    WHERE player_id = $1
+      AND upgrade_name IN (
+          SELECT name
+          FROM upgrade_catalog
+          WHERE LOWER(upgrade_kind) = 'building'
+            AND base_interval_speed IS NOT NULL
+      )
+    ON CONFLICT (upgrade_id) DO NOTHING;
+    `,
+            [playerId]
+        );
+    }
     static async login( // Remove logs later after done debugging
         username: string,
         password: string
@@ -175,6 +210,8 @@ export default class Account {
         loadedPlayer.account = account;
         account.player = loadedPlayer;
         await account.player.loadUpgrade();
+        await account.player.loadBuildings();
+        account.player.startBuildingAutoClickers(); // When the user logs in, the building autoclickers begin
 
 
         console.log("LOGIN 6: Loaded player added to account");
