@@ -1,4 +1,10 @@
---
+TRUNCATE TABLE
+    buildings,
+    upgrade_inventory,
+    upgrade_catalog,
+    player,
+    account
+RESTART IDENTITY CASCADE;
 -- ACCOUNT
 create table if not exists account
 (
@@ -79,8 +85,8 @@ insert into upgrade_catalog
 values
     ('Financial Advisor', 'UPGRADE', 50, 20, null),
     ('Employer',          'UPGRADE', 100, 20, null),
-    ('Royal Mint',        'BUILDING', 500, 50, 10),
-    ('Banker',            'BUILDING', 1000, 100, 5)
+    ('Royal Mint',        'BUILDING', 500, 2, 1000),
+    ('Banker',            'BUILDING', 1000, 10, 5000)
     on conflict (name) do nothing;
 
 -- -- ACCOUNT
