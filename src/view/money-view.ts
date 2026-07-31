@@ -25,7 +25,7 @@ export default class MoneyView implements Listener {
             <div>
                 Money $<span id="buy-power">0</span>
             </div>
-
+            <div id="money-error" hidden></div>
             <br>
             <div id="clicker">
                 <button id="click-button">
@@ -86,4 +86,13 @@ export default class MoneyView implements Listener {
     //     document.querySelector("#buy-power")!.textContent =
     //         this.#player.buyPower.toString();
     // }
+    public displayProgressNotSaved(): void {
+        const errorElement =
+            document.querySelector<HTMLDivElement>("#money-error");
+
+        if (errorElement !== null) {
+            errorElement.textContent = "Progress could not be saved. An error occured.";
+            errorElement.hidden = false;
+        }
+    }
 }

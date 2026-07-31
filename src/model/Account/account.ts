@@ -1,7 +1,7 @@
 import Player from "../player.ts";
 import db from "../connection.ts";
-import NoPLayerFoundError from "./NoPlayerFoundError.ts";
-import DuplicateUserNameError from "./DuplicateUserNameError.ts";
+import NoPLayerFoundError from "../ErrorMethods/NoPlayerFoundError.ts";
+import DuplicateUserNameError from "../ErrorMethods/DuplicateUserNameError.ts";
 // import type Player from "./player.ts";
 import Security from "./security.ts";
 
@@ -150,14 +150,10 @@ export default class Account {
             [playerId]
         );
     }
-    static async login( // Remove logs later after done debugging
+    static async login(
         username: string,
         password: string
     ): Promise<Account | null> {
-        console.log("LOGIN 1: Method started");
-        console.log("Entered username:", JSON.stringify(username));
-        console.log("Entered password:", JSON.stringify(password));
-
         const results = await db().query<{
             username: string;
             password: string;
@@ -170,65 +166,37 @@ export default class Account {
             [username]
         );
 
-
-        console.log("LOGIN 2: Query completed");
-        console.log("Rows returned:", results.rows);
-
         const row = results.rows[0];
 
-        const security = new Security();
-        const passwordMatches = await security.verifyPassword(
-            password,
-            row.password
-        );
+        // Username does not exist
         if (!row) {
-            console.log("LOGIN FAILED: Username was not found");
             return null;
         }
 
-        console.log("Stored username:", JSON.stringify(row.username));
-        console.log("Stored password:", JSON.stringify(row.password));
-        console.log(
-            "Password matches:",
-            // passwordMatches === row.password
-        );
+        const security = new Security();
+        const passwordMatches = await security.verifyPassword(password, row.password);
 
+        // Password is incorrect
         if (!passwordMatches) {
-            console.log("LOGIN FAILED: Password does not match");
             return null;
         }
 
-        console.log("LOGIN 3: Username and password are correct");
-
-        const account = new Account(
-            row.username,
-            row.password
-        );
-
-        console.log("LOGIN 4: Account object created");
+        const account = new Account(row.username, row.password);
 
         const loadedPlayer =
             await Player.getPlayerByAccount(row.username);
 
-        console.log("LOGIN 5: Player result:", loadedPlayer);
-
         if (loadedPlayer === null) {
-            console.log(
-                "LOGIN FAILED: Account exists, but no player row was found"
-            );
-
             throw new NoPLayerFoundError();
         }
+
         loadedPlayer.account = account;
         account.player = loadedPlayer;
-        await account.player.loadUpgrade();
-        await account.player.loadBuildings();
-        account.player.startBuildingAutoClickers(); // When the user logs in, the building autoclickers begin
 
+        await loadedPlayer.loadUpgrade();
+        await loadedPlayer.loadBuildings();
 
-        console.log("LOGIN 6: Loaded player added to account");
-        console.log("LOGIN SUCCESS:", account);
-
+        loadedPlayer.startBuildingAutoClickers();
         return account;
     }
 

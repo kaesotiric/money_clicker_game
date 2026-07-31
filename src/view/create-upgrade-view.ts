@@ -26,6 +26,8 @@ export default class CreateUpgradeView implements Listener{
         this.#dialog.innerHTML = `
             <h2>Upgrade Store</h2>
 
+            <div id="upgrade-error" hidden></div>
+
             <button id="purchase-advisor">
                 Buy Financial Advisor
             </button>
@@ -135,6 +137,16 @@ export default class CreateUpgradeView implements Listener{
             .textContent = this.#player.findPrice(UpgradeType.Banker).toString();
         this.#dialog.querySelector<HTMLSpanElement>("#mint-price")!
             .textContent = this.#player.findPrice(UpgradeType.RoyalMint).toString();
+    }
+
+    displayPlayerMustBeLoggedIn(){
+        const errorElement =
+            document.querySelector<HTMLDivElement>("#upgrade-error");
+
+        if (errorElement !== null) {
+            errorElement.textContent = "Player must be logged in first.";
+            errorElement.hidden = false;
+        }
     }
 
 }
