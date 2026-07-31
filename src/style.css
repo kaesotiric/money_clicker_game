@@ -417,6 +417,25 @@ button {
     transform: translateY(-2px);
 }
 
+#purchase-banker {
+    background: #0ba;
+    color: white;
+    margin-right: 12px;
+}
+#purchase-banker:hover {
+    background:  #00bbaaba;;
+    transform: translateY(-1px);
+}
+
+#purchase-mint {
+    background: #0ba;
+    color: white;
+    margin-right: 12px;
+}
+#purchase-mint:hover {
+    background: #00bbaaba;
+    transform: translateY(-1px);
+}
 /* =========================
    UPGRADE STORE DIALOG
    ========================= */

@@ -181,7 +181,62 @@ export default class Player {
         }
     }
 
-    public async loadUpgrade(): Promise<void>{
+    // public async loadUpgrade(): Promise<void> {
+    //     const results = await db().query<{
+    //         id: number;
+    //         upgrade_name: UpgradeType;
+    //         upgrade_level: number;
+    //         upgrade_production: number;
+    //         buypower_cost: number;
+    //         player_id: number;
+    //     }>(
+    //         `
+    //             SELECT
+    //                 id,
+    //                 upgrade_name,
+    //                 upgrade_level,
+    //                 upgrade_production,
+    //                 buypower_cost,
+    //                 player_id
+    //             FROM upgrade_inventory
+    //             WHERE player_id = $1
+    //               AND id NOT IN (
+    //                 SELECT upgrade_id
+    //                 FROM buildings
+    //             )
+    //             ORDER BY id;
+    //         `,
+    //         [this.#id]
+    //     );
+    //
+    //     const upgrades: Upgrade[] = this.#upgrades;
+    //
+    //     for (const row of results.rows) {
+    //         const upgradeType =
+    //             this.#toUpgradeType(row.upgrade_name);
+    //
+    //         const index = upgrades.findIndex(
+    //             (upgrade) =>
+    //                 upgrade.upgradeName === upgradeType
+    //         );
+    //
+    //         const loadedUpgrade = new Upgrade(
+    //             upgradeType,
+    //             row.upgrade_level,
+    //             row.upgrade_production,
+    //             row.buypower_cost
+    //         );
+    //
+    //         if (index >= 0) {
+    //             upgrades[index] = loadedUpgrade;
+    //         } else {
+    //             upgrades.push(loadedUpgrade);
+    //         }
+    //     }
+    //
+    //     this.#upgrades = upgrades;
+    // }
+    public async loadUpgrade(): Promise<void> {
         const results = await db().query<{
             id: number;
             upgrade_name: UpgradeType;
@@ -189,31 +244,36 @@ export default class Player {
             upgrade_production: number;
             buypower_cost: number;
             player_id: number;
-        }>
-        (`select id, upgrade_name, upgrade_level, upgrade_production, 
-        buypower_cost, player_id 
-        FROM upgrade_inventory  where player_id = $1 
-        ORDER by id;`,
-            [this.#id] // The player's ID that was generated when account was created
+        }>(
+            `
+                SELECT
+                    id,
+                    upgrade_name,
+                    upgrade_level,
+                    upgrade_production,
+                    buypower_cost,
+                    player_id
+                FROM upgrade_inventory
+                WHERE player_id = $1
+                  AND upgrade_name IN (
+                    SELECT name
+                    FROM upgrade_catalog
+                    WHERE LOWER(TRIM(upgrade_kind)) <> 'BUILDING'
+                )
+                ORDER BY id;
+            `,
+            [this.#id]
         );
-        // const upgrades:Upgrade[] = this.#upgrades;
-        // for(const row of results.rows){
-        //     const upgradeType: UpgradeType = this.#toUpgradeType(row.upgrade_name);
-        //     upgrades.push(new Upgrade(upgradeType, row.upgrade_level, row.upgrade_production, row.buypower_cost))
-        //
-        //     }
-        //     // upgrades.push(new Upgrade(upgradeType, row.upgrade_level, row.upgrade_production, row.buypower_cost))
-        //
-        // this.#upgrades = upgrades;
 
         const upgrades: Upgrade[] = this.#upgrades;
 
         for (const row of results.rows) {
-            const upgradeType: UpgradeType =
+            const upgradeType =
                 this.#toUpgradeType(row.upgrade_name);
 
             const index = upgrades.findIndex(
-                (upgrade) => upgrade.upgradeName === upgradeType
+                (upgrade) =>
+                    upgrade.upgradeName === upgradeType
             );
 
             const loadedUpgrade = new Upgrade(
@@ -241,36 +301,51 @@ export default class Player {
             upgrade_production: number;
             buypower_cost: number;
             player_id: number;
-            interval_speed: number;
         }>(
             `
-        SELECT
-            id,
-            upgrade_name,
-            upgrade_level,
-            upgrade_production,
-            buypower_cost,
-            player_id,
-            (
-                SELECT interval_speed
-                FROM buildings
-                WHERE buildings.upgrade_id = upgrade_inventory.id
-            ) AS interval_speed
-        FROM upgrade_inventory
-        WHERE player_id = $1
-          AND id IN (
-              SELECT upgrade_id
-              FROM buildings
-          )
-        ORDER BY id;
-        `,
+                SELECT
+                    id,
+                    upgrade_name,
+                    upgrade_level,
+                    upgrade_production,
+                    buypower_cost,
+                    player_id
+                FROM upgrade_inventory
+                WHERE player_id = $1
+                  AND upgrade_name IN (
+                    SELECT name
+                    FROM upgrade_catalog
+                    WHERE upgrade_kind = 'BUILDING'
+                )
+                ORDER BY id;
+            `,
             [this.#id]
         );
 
         const buildings: Building[] = this.#buildings;
 
         for (const row of results.rows) {
-            const upgradeType: UpgradeType =
+            const intervalResult = await db().query<{
+                interval_speed: number;
+            }>(
+                `
+            SELECT interval_speed
+            FROM buildings
+            WHERE upgrade_id = $1;
+            `,
+                [row.id]
+            );
+
+            if (intervalResult.rows.length === 0) {
+                throw new Error(
+                    `Building information was not found for ${row.upgrade_name}.`
+                );
+            }
+
+            const intervalSpeed =
+                intervalResult.rows[0].interval_speed;
+
+            const upgradeType =
                 this.#toUpgradeType(row.upgrade_name);
 
             const index = buildings.findIndex(
@@ -283,7 +358,7 @@ export default class Player {
                 row.upgrade_level,
                 row.upgrade_production,
                 row.buypower_cost,
-                row.interval_speed
+                intervalSpeed
             );
 
             if (index >= 0) {
@@ -294,6 +369,8 @@ export default class Player {
         }
 
         this.#buildings = buildings;
+
+        console.log("Loaded buildings:", this.#buildings);
     }
 
     static async getPlayerByAccount(username:string): Promise<Player | null>{
@@ -531,30 +608,43 @@ export default class Player {
 
         return purchasedUpgrade;
     }
-    public purchaseBuilding(type: UpgradeType): void {
-        for (let i = 0; i < this.#buildings.length; i++) {
+    public purchaseBuilding(type: UpgradeType): Building | null {
+        let purchasedBuilding: Building | null = null;
+        let found = false;
+
+        for (
+            let i = 0;
+            i < this.#buildings.length && !found;
+            i++
+        ) {
             const building = this.#buildings[i];
 
             if (building.upgradeName === type) {
+                found = true;
+
                 if (this.#buyPower >= building.buyPowerCost) {
                     this.#buyPower -= building.buyPowerCost;
 
                     building.increaseLevel();
+                    building.updateBuyPowerCost();
 
                     building.startAutoClicker(
                         (amount: number) => {
-                            this.#buyPower += amount;
-
-                            this.#checkMoney();
-                            this.#notifyAll();
+                            this.#addAutomaticBuyPower(amount);
                         }
                     );
 
+                    this.#checkMoney();
                     this.#notifyAll();
+
+                    purchasedBuilding = building;
                 }
             }
         }
+
+        return purchasedBuilding;
     }
+
     #addAutomaticBuyPower(amount: number): void {
         this.#buyPower += amount;
 

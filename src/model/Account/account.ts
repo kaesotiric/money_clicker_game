@@ -113,6 +113,9 @@ export default class Account {
         await this.initializeBuildings(playerId); // Give the player's building upgrades their building information
 
         account.player.id = playerId;
+        await account.player.loadUpgrade();
+        await account.player.loadBuildings();
+
 
         return account;
     }

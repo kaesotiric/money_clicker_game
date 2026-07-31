@@ -204,9 +204,21 @@ export default class MoneyController {
             }
         }
     }
-    public purchaseBuilding(type: UpgradeType): void {
-        if (this.#account !== undefined) {
-            this.#account.player.purchaseBuilding(type);
+    public async purchaseBuilding(
+        type: UpgradeType
+    ): Promise<void> {
+        if (this.#account === undefined) {
+            throw new Error("A player must be logged in first.");
+        }
+
+        const player = this.#account.player;
+        const building = player.purchaseBuilding(type);
+
+        if (building !== null) {
+            await player.saveBuilding(
+                building,
+                player.id
+            );
         }
     }
 
