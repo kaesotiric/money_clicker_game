@@ -1,10 +1,10 @@
-TRUNCATE TABLE
-    buildings,
-    upgrade_inventory,
-    upgrade_catalog,
-    player,
-    account
-RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE
+--     buildings,
+--     upgrade_inventory,
+--     upgrade_catalog,
+--     player,
+--     account
+-- RESTART IDENTITY CASCADE;
 -- ACCOUNT
 create table if not exists account
 (

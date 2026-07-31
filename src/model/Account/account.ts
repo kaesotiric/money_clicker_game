@@ -3,6 +3,7 @@ import db from "../connection.ts";
 import NoPLayerFoundError from "./NoPlayerFoundError.ts";
 import DuplicateUserNameError from "./DuplicateUserNameError.ts";
 // import type Player from "./player.ts";
+import Security from "./security.ts";
 
 export default class Account {
     #username: string;
@@ -55,6 +56,8 @@ export default class Account {
         username: string,
         password: string
     ): Promise<Account> {
+        const security = new Security();
+        const hashedPass = await security.hashPassword(password);
         const results = await db().query<{ username: string }>(
             `
         INSERT INTO account (
@@ -65,7 +68,7 @@ export default class Account {
         ON CONFLICT (username) DO NOTHING
         RETURNING username;
         `,
-            [username, password]
+            [username, hashedPass]
         );
 
         if (results.rows.length === 0) {
@@ -73,7 +76,7 @@ export default class Account {
         }
 
         // The constructor creates the Player object in memory
-        const account = new Account(username, password);
+        const account = new Account(username, hashedPass);
 
         // Insert the player and return its generated ID
         const playerResult = await db().query<{ id: number }>(
@@ -167,11 +170,17 @@ export default class Account {
             [username]
         );
 
+
         console.log("LOGIN 2: Query completed");
         console.log("Rows returned:", results.rows);
 
         const row = results.rows[0];
 
+        const security = new Security();
+        const passwordMatches = await security.verifyPassword(
+            password,
+            row.password
+        );
         if (!row) {
             console.log("LOGIN FAILED: Username was not found");
             return null;
@@ -181,10 +190,10 @@ export default class Account {
         console.log("Stored password:", JSON.stringify(row.password));
         console.log(
             "Password matches:",
-            password === row.password
+            // passwordMatches === row.password
         );
 
-        if (password !== row.password) {
+        if (!passwordMatches) {
             console.log("LOGIN FAILED: Password does not match");
             return null;
         }

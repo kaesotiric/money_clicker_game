@@ -251,7 +251,7 @@ export default class CreateAccountView implements Listener {
         this.#clearErrorMessage();
 
         if (!this.#dialog.open) {
-            this.#dialog.showModal();
+            this.#dialog.show();
         }
 
         this.#dialog
