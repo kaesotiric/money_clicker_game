@@ -148,5 +148,11 @@ export default class CreateUpgradeView implements Listener{
             errorElement.hidden = false;
         }
     }
+    /**
+     * Shows an error when the player cannot afford a purchase
+     */
+    public showInsufficientBuyPowerError(): void {
+        alert("You do not have enough money for this purchase");
+    }
 
 }

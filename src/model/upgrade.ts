@@ -67,12 +67,6 @@ export default class Upgrade {
     get buyPowerCost(): number {
         return this.#buyPowerCost;
     }
-    // get canAutoClick(): boolean {
-    //     return this.#canAutoClick;
-    // }
-    // autoClick():void{
-    //     this.#canAutoClick = true;
-    // }
 
     /**
      * Checks that the upgrade values follow the class invariants

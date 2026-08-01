@@ -1,152 +1,15 @@
-// /**
-//  * Handles user actions from the views
-//  * Connects the views to the player model
-//  */
-// import MoneyView from "../view/money-view.ts";
-// import CreateUpgradeView from "../view/create-upgrade-view.ts";
-// import {UpgradeType} from "../model/UpgradeType.ts";
-// // import db from "../model/connection.ts";
-// import CreateAccountView from "../view/create-account-view.ts";
-// import Account from "../model/Account/account.ts";
-// import DuplicateUserNameError from "../model/ErrorMethods/DuplicateUserNameError.ts";
-// import NoAccountFoundError from "../model/ErrorMethods/NoAccountFoundError.ts";
-//
-// export default class MoneyController {
-//
-//     // #player?: Player;
-//     #account?: Account; // logged in account
-//     #createAccountView?: CreateAccountView;
-//     #createUpgradeView?: CreateUpgradeView;
-//     #moneyView?: MoneyView;
-//
-//     constructor() {
-//
-//         this.#createAccountView = new CreateAccountView(this);
-//         this.#createAccountView.show();
-//     }
-//
-//     async createAccount(username: string, password: string): Promise<void> {
-//         try {
-//             this.#account = await Account.createAccount(username, password);
-//             console.log("creating account in controller test")
-//             this.#createAccountView?.close();
-//
-//             this.#moneyView = new MoneyView(this.#account.player, this);
-//         } catch (error) {
-//             if (error instanceof DuplicateUserNameError) {
-//                 this.#createAccountView?.showDuplicateError();
-//             }
-//         }
-//     }
-//
-//     async login(username: string, password: string): Promise<void> {
-//         const account = await Account.login(username, password);
-//
-//         if (account === null) {
-//             this.#createAccountView?.showErrorMessage();
-//             return;
-//         }
-//
-//         this.#account = account;
-//         this.#createAccountView?.close();
-//
-//         new MoneyView(this.#account.player, this);
-//     }
-//
-//
-//     async handleClick(): Promise<void> {
-//         if (!this.#account) {
-//             return;
-//         }
-//
-//         try {
-//             const player = this.#account.player;
-//
-//             player.click();
-//             await player.savePlayer();
-//         } catch (error) {
-//             this.#moneyView?.displayProgressNotSaved();
-//         }
-//     }
-//
-//     /**
-//      * Handles showing the upgrade store from the view
-//      * Side effects: creates the upgrade view if it does not already exist and shows it
-//      */
-//     showCreateUpgradeView(): void {
-//         if (!this.#account) {
-//             return;
-//         }
-//
-//         // Create the dialog the first time
-//         if (!this.#createUpgradeView) {
-//             this.#createUpgradeView = new CreateUpgradeView(this.#account.player, this);
-//         }
-//
-//         // Show the dialog
-//         this.#createUpgradeView.show();
-//     }
-//
-//     async purchaseUpgrade(upgradeName: UpgradeType): Promise<void> {
-//         if (this.#account) {
-//             const player = this.#account.player;
-//
-//             const purchasedUpgrade =
-//                 player.purchaseByName(upgradeName);
-//
-//             if (purchasedUpgrade !== null) {
-//                 const playerId = await player.savePlayer();
-//
-//                 await player.saveUpgrade(
-//                     purchasedUpgrade,
-//                     playerId
-//                 );
-//             }
-//         }
-//     }
-//     public async purchaseBuilding(
-//         type: UpgradeType
-//     ): Promise<void> {
-//         if (this.#account === undefined) {
-//             throw new NoAccountFoundError();
-//         }
-//
-//         const player = this.#account.player;
-//         const building = player.purchaseBuilding(type);
-//
-//         if (building !== null) {
-//             await player.saveBuilding(
-//                 building,
-//                 player.id
-//             );
-//         }
-//     }
-//
-// }
-//
-//
-//
-//
-//
-//
-/**
- * Handles user actions from the views.
- * Connects the views to the player model.
- */
+
 
 import MoneyView from "../view/money-view.ts";
 import CreateUpgradeView from "../view/create-upgrade-view.ts";
 import CreateAccountView from "../view/create-account-view.ts";
-
 import {UpgradeType} from "../model/UpgradeType.ts";
 import Account from "../model/Account/account.ts";
-import PlayerPersistence
-    from "../model/player-persistence.ts";
+import PlayerPersistence from "../model/player-persistence.ts";
+import DuplicateUserNameError from "../model/ErrorMethods/DuplicateUserNameError.ts";
+import NoAccountFoundError from "../model/ErrorMethods/NoAccountFoundError.ts";
+import InsufficientBuyPowerError from "../model/ErrorMethods/InsufficientBPError.ts";
 
-import DuplicateUserNameError
-    from "../model/ErrorMethods/DuplicateUserNameError.ts";
-import NoAccountFoundError
-    from "../model/ErrorMethods/NoAccountFoundError.ts";
 
 export default class MoneyController {
     #account?: Account;
@@ -156,34 +19,42 @@ export default class MoneyController {
 
     constructor() {
         this.#createAccountView = new CreateAccountView(this);
-
         this.#createAccountView.show();
     }
 
+    /**
+     * Creates a new account using the entered information
+     *
+     * @param username The username entered by the user
+     * @param password The password entered by the user
+     * Side effects: Saves a new account and opens the main game view
+     */
     async createAccount(
         username: string,
         password: string
     ): Promise<void> {
         try {
-            this.#account =
-                await Account.createAccount(username, password);
+            // Account creation also creates and loads the player's information
+            this.#account = await Account.createAccount(username, password);
+            this.#createAccountView?.close(); // Closes since account view is no longer needed after account creation
 
-            console.log(
-                "creating account in controller test"
-            );
-
-            this.#createAccountView?.close();
-
+            // Open the game using the new player's info
             this.#moneyView = new MoneyView(this.#account.player, this);
+
         } catch (error) {
-            if (
-                error instanceof DuplicateUserNameError
-            ) {
+            if (error instanceof DuplicateUserNameError) {
                 this.#createAccountView?.showDuplicateError();
             }
         }
     }
 
+    /**
+     * Attempts to log in using the entered information
+     *
+     * @param username The username entered by the user
+     * @param password The password entered by the user
+     * Side effects: May close the account view and open the main game view
+     */
     async login(
         username: string,
         password: string
@@ -195,28 +66,31 @@ export default class MoneyController {
             return;
         }
 
-        this.#account = account;
+        this.#account = account; // Keep the successfully loaded account in the controller
         this.#createAccountView?.close();
 
-        this.#moneyView = new MoneyView(
-            this.#account.player, this);
+        // Opens the game using the player's saved information
+        this.#moneyView = new MoneyView(this.#account.player, this);
     }
 
-    async handleClick(): Promise<void> {
-        if (!this.#account) {
-            return;
-        }
 
-        try {
-            const player = this.#account.player;
+    /**
+     * Handles a click made by the player
+     *
+     * Side effects: Increases buy power, updates the view and saves the player
+     */
+    public async handleClick(): Promise<void> {
+        if (this.#account !== undefined) {
+            try {
+                const player = this.#account.player;
+                player.click(); // Updates the player in memory first
+                const persistence = new PlayerPersistence(player);
+                await persistence.savePlayer(); // Saves the new buy power after the click
 
-            player.click();
-
-            const persistence = new PlayerPersistence(player);
-
-            await persistence.savePlayer();
-        } catch (error) {
-            this.#moneyView?.displayProgressNotSaved();
+            } catch (error) {
+                // Let the user know their latest progress was not saved due to an error
+                this.#moneyView?.displayProgressNotSaved();
+            }
         }
     }
 
@@ -234,52 +108,96 @@ export default class MoneyController {
 
         this.#createUpgradeView.show();
     }
-
-    async purchaseUpgrade(
+    /**
+     * Attempts to purchase and save a regular upgrade
+     *
+     * @param upgradeName The type of upgrade being purchased
+     * Side effects: May change and save the player's money and upgrade
+     */
+    // public async purchaseUpgrade(upgradeName: UpgradeType): Promise<void> {
+    //     if (this.#account !== undefined) {
+    //         const player = this.#account.player;
+    //
+    //         // A null result means the upgrade was not found or could not be purchased
+    //         const purchasedUpgrade = player.purchaseByName(upgradeName);
+    //
+    //         if (purchasedUpgrade !== null) {
+    //             const persistence = new PlayerPersistence(player);
+    //
+    //             // Save the money spent and get the player's database ID
+    //             const playerId = await persistence.savePlayer();
+    //
+    //             // Saves the new level, cost and production
+    //             await persistence.saveUpgrade(purchasedUpgrade, playerId);
+    //         }
+    //     }
+    // }
+    public async purchaseUpgrade(
         upgradeName: UpgradeType
     ): Promise<void> {
-        if (!this.#account) {
-            return;
-        }
+        if (this.#account !== undefined) {
+            try {
+                const player = this.#account.player;
 
-        const player = this.#account.player;
+                // This throws an error when the player cannot afford the upgrade
+                const purchasedUpgrade = player.purchaseByName(upgradeName);
 
-        const purchasedUpgrade =
-            player.purchaseByName(upgradeName);
+                if (purchasedUpgrade !== null) {
+                    const persistence = new PlayerPersistence(player);
 
-        if (purchasedUpgrade !== null) {
-            const persistence = new PlayerPersistence(player);
+                    // Save the money spent on the upgrade
+                    const playerId = await persistence.savePlayer();
 
-            // Saves the player's new buy power.
-            const playerId = await persistence.savePlayer();
-
-            // Saves the new upgrade level, cost,
-            // and production.
-            await persistence.saveUpgrade(purchasedUpgrade, playerId);
+                    // Save the new upgrade information
+                    await persistence.saveUpgrade(purchasedUpgrade, playerId);
+                }
+            } catch (error) {
+                if (error instanceof InsufficientBuyPowerError) {
+                    // Tell the upgrade view to show the error
+                    this.#createUpgradeView?.showInsufficientBuyPowerError();
+                } else {
+                    throw error;
+                }
+            }
         }
     }
 
+    /**
+     * Attempts to purchase and save a building
+     *
+     * @param type The type of building being purchased
+     * @throws NoAccountFoundError When no account is logged in
+     * Side effects: May change and save the player's money and building
+     */
     public async purchaseBuilding(
         type: UpgradeType
     ): Promise<void> {
         if (this.#account === undefined) {
             throw new NoAccountFoundError();
-        }
+        } else {
+            try {
+                const player = this.#account.player;
 
-        const player = this.#account.player;
+                // The player throws an error when they cannot afford the building
+                const building = player.purchaseBuilding(type);
 
-        const building =
-            player.purchaseBuilding(type);
+                if (building !== null) {
+                    const persistence = new PlayerPersistence(player);
 
-        if (building !== null) {
-            const persistence = new PlayerPersistence(player);
+                    // Save the money spent and get the player's database ID
+                    const playerId = await persistence.savePlayer();
 
-            // Save the money spent on the building.
-            const playerId = await persistence.savePlayer();
-
-            // Save the building level, cost,
-            // production and interval.
-            await persistence.saveBuilding(building, playerId);
+                    // Save the level, cost, production and interval speed
+                    await persistence.saveBuilding(building, playerId);
+                }
+            } catch (error) {
+                if (error instanceof InsufficientBuyPowerError) {
+                    // Tell the upgrade view to show the error
+                    this.#createUpgradeView?.showInsufficientBuyPowerError();
+                } else {
+                    throw error;
+                }
+            }
         }
     }
 }

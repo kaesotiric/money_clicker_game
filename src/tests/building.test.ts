@@ -99,7 +99,7 @@ describe("Player buildings", () => {
 
         expect(firstPrice).toBeGreaterThan(0);
 
-        player.updatedBuyPower = firstPrice;
+        player.buyPower = firstPrice;
 
         const firstPurchase = player.purchaseBuilding(UpgradeType.Banker);
 
@@ -108,7 +108,7 @@ describe("Player buildings", () => {
 
         // Second purchase
         const secondPrice = player.findPrice(UpgradeType.Banker);
-        player.updatedBuyPower = secondPrice;
+        player.buyPower = secondPrice;
 
         const secondPurchase = player.purchaseBuilding(UpgradeType.Banker);
 

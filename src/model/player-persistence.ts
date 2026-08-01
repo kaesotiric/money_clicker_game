@@ -3,13 +3,14 @@ import Upgrade from "./upgrade.ts";
 import Building from "./building.ts";
 import db from "./connection.ts";
 import { UpgradeType } from "./UpgradeType.ts";
+import UnknownUpgradeTypeError from "./ErrorMethods/UnknownUpgradeTypeError.ts";
+import NoPlayerFoundError from "./ErrorMethods/NoPlayerFoundError.ts";
+import UpgradeNotFoundError from "./ErrorMethods/UpgradeNotFoundError.ts";
+import BuildingNotFoundError from "./ErrorMethods/BuildingNotFoundError.ts";
 
-import UnknownUpgradeTypeError
-    from "./ErrorMethods/UnknownUpgradeTypeError.ts";
-
-import NoPLayerFoundError
-    from "./ErrorMethods/NoPlayerFoundError.ts";
-
+/**
+ * Saves and loads player information from the database
+ */
 export default class PlayerPersistence {
     #player: Player;
 
@@ -17,9 +18,12 @@ export default class PlayerPersistence {
         this.#player = player;
     }
 
-
     /**
-     * Saves the player's buy power and current click amount.
+     * Saves the player's buy power and click amount
+     *
+     * @return The ID of the saved player
+     * @throws NoPLayerFoundError When the player is not found
+     * Side effects: Updates the player table
      */
     public async savePlayer(): Promise<number> {
         const results = await db().query<{
@@ -39,16 +43,21 @@ export default class PlayerPersistence {
                 this.#player.account.username
             ]
         );
-
+        // No returned row means the player was not found
         if (results.rows.length === 0) {
-            throw new NoPLayerFoundError();
+            throw new NoPlayerFoundError();
         }
 
         return results.rows[0].id;
     }
 
     /**
-     * Saves a regular upgrade belonging to the player.
+     * Saves a regular upgrade owned by the player
+     *
+     * @param upgrade The upgrade being saved
+     * @param playerId The ID of the player who owns the upgrade
+     * @throws UpgradeNotFoundError When the upgrade is not found
+     * Side effects: Updates the upgrade inventory table
      */
     public async saveUpgrade(
         upgrade: Upgrade,
@@ -74,14 +83,17 @@ export default class PlayerPersistence {
         );
 
         if (results.affectedRows === 0) {
-            throw new Error(
-                "Upgrade was not found in the player's inventory."
-            );
+            throw new UpgradeNotFoundError();
         }
     }
 
     /**
-     * Saves a building belonging to the player.
+     * Saves a building owned by the player
+     *
+     * @param building The building being saved
+     * @param playerId The ID of the player who owns the building
+     * @throws BuildingNotFoundError When the building is not found
+     * Side effects: Updates the upgrade inventory and buildings tables
      */
     public async saveBuilding(
         building: Building,
@@ -107,11 +119,10 @@ export default class PlayerPersistence {
         );
 
         if (upgradeResult.affectedRows === 0) {
-            throw new Error(
-                "Upgrade was not found in the player's inventory."
-            );
-        }
+            throw new UpgradeNotFoundError();
 
+        }
+        // The buildings table only stores information specific to buildings
         const buildingResult = await db().query(
             `
                 UPDATE buildings
@@ -131,14 +142,15 @@ export default class PlayerPersistence {
         );
 
         if (buildingResult.affectedRows === 0) {
-            throw new Error(
-                "Building was not found in the buildings table."
-            );
+            throw new BuildingNotFoundError();
+
         }
     }
 
     /**
-     * Loads the player's regular upgrades.
+     * Loads the player's regular upgrades
+     *
+     * Side effects: Replaces the player's regular upgrade array
      */
     public async loadUpgrade(): Promise<void> {
         const results = await db().query<{
@@ -170,27 +182,7 @@ export default class PlayerPersistence {
             [this.#player.id]
         );
 
-        // const upgrades = new Array<Upgrade>();
-        //
-        // for (const row of results.rows) {
-        //     const upgradeType =
-        //         PlayerPersistence.#toUpgradeType(
-        //             row.upgrade_name
-        //         );
-        //
-        //     const loadedUpgrade = new Upgrade(
-        //         upgradeType,
-        //         row.upgrade_level,
-        //         row.upgrade_production,
-        //         row.buypower_cost
-        //     );
-        //
-        //     upgrades.push(loadedUpgrade);
-        // }
-        //
-        // this.#player.upgrades = upgrades;
-
-        const upgrades: Upgrade[] = [];
+        const upgrades: Upgrade[] = []; // Uses a new arr so previously loaded values are not duplicated
 
         for (const row of results.rows) {
             const upgradeType = PlayerPersistence.#toUpgradeType(row.upgrade_name);
@@ -205,11 +197,14 @@ export default class PlayerPersistence {
             upgrades.push(loadedUpgrade);
         }
 
-        this.#player.upgrades = upgrades;
+        this.#player.upgrades = upgrades; // This will replace the player's current list with the database values
     }
 
     /**
-     * Loads the player's buildings.
+     * Loads the player's buildings
+     *
+     * @throws Error When a building is missing its interval information
+     * Side effects: Replaces the player's building array
      */
     public async loadBuildings(): Promise<void> {
         const results = await db().query<{
@@ -287,12 +282,11 @@ export default class PlayerPersistence {
         );
     }
 
-    /**
-     * Loads a player using the account username.
-     */
-    static async getPlayerByAccount(
+    public static async getPlayerByAccount(
         username: string
     ): Promise<Player | null> {
+        let loadedPlayer: Player | null = null;
+
         const results = await db().query<{
             id: number;
             playername: string;
@@ -315,30 +309,34 @@ export default class PlayerPersistence {
 
         const row = results.rows[0];
 
-        if (!row) {
-            return null;
+        // Only create the player when a matching row was found
+        if (row !== undefined) {
+            const player = new Player(row.playername);
+
+            // Restore the player's saved values
+            player.id = row.id;
+            player.buyPower = row.buypower;
+            player.currClick = row.curr_click;
+
+            const persistence =
+                new PlayerPersistence(player);
+
+            // Load the upgrades that belong to the saved player
+            await persistence.loadUpgrade();
+            await persistence.loadBuildings();
+
+            // Restart timers for buildings that were already purchased
+            player.startBuildingAutoClickers();
+
+            loadedPlayer = player;
         }
 
-        const player = new Player(row.playername);
-
-        player.id = row.id;
-        player.buyPower = row.buypower;
-        player.currClick = row.curr_click;
-
-        const persistence =
-            new PlayerPersistence(player);
-
-        await persistence.loadUpgrade();
-        await persistence.loadBuildings();
-
-        // Restart building timers for the loaded player.
-        player.startBuildingAutoClickers();
-
-        return player;
+        return loadedPlayer;
     }
 
+
     /**
-     * Converts a database upgrade name into an UpgradeType.
+     * Converts a database upgrade name into an UpgradeType enum
      */
     static #toUpgradeType(
         name: string
@@ -363,6 +361,13 @@ export default class PlayerPersistence {
 
         return upgradeType;
     }
+
+    /**
+     * Creates the extra database rows needed by building upgrades
+     *
+     * @param playerId The ID of the player receiving the buildings
+     * Side effects: Adds rows to the buildings table
+     */
     static async initializeBuildings(
         playerId: number
     ): Promise<void> {

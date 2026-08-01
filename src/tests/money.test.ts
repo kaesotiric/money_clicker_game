@@ -23,7 +23,7 @@ describe("Player upgrades", () => {
 
         // First purchase
         const firstPrice = player.findPrice(UpgradeType.FinancialAdvisor);
-        player.updatedBuyPower = firstPrice;
+        player.buyPower = firstPrice;
 
         player.purchaseByName(UpgradeType.FinancialAdvisor);
 
@@ -31,7 +31,7 @@ describe("Player upgrades", () => {
 
         // Second purchase
         const secondPrice = player.findPrice(UpgradeType.FinancialAdvisor);
-        player.updatedBuyPower = secondPrice;
+        player.buyPower = secondPrice;
 
         player.purchaseByName(UpgradeType.FinancialAdvisor);
 
@@ -44,7 +44,7 @@ describe("Player upgrades", () => {
 
         // First purchase
         const firstPrice = player.findPrice(UpgradeType.Employer);
-        player.updatedBuyPower = firstPrice;
+        player.buyPower = firstPrice;
 
         player.purchaseByName(UpgradeType.Employer);
 
@@ -52,7 +52,7 @@ describe("Player upgrades", () => {
 
         // Second purchase
         const secondPrice = player.findPrice(UpgradeType.Employer);
-        player.updatedBuyPower = secondPrice;
+        player.buyPower = secondPrice;
 
         player.purchaseByName(UpgradeType.Employer);
 

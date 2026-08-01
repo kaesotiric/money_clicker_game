@@ -1,8 +1,3 @@
-/**
- * Represents the player in the game
- * Stores the player's buy power, click amount and upgrades
- */
-//Need to move methods
 import assert from "../assertions.ts";
 import type Listener from "./listener.ts";
 import Upgrade from "./upgrade.ts";
@@ -11,6 +6,12 @@ import type Account from "./Account/account.ts";
 import Building from "./building.ts";
 import PlayerIdNotFoundError from "./ErrorMethods/PlayerIDNotFoundError.ts";
 import NoAccountFoundError from "./ErrorMethods/NoAccountFoundError.ts";
+import InsufficientBuyPowerError from "./ErrorMethods/InsufficientBPError.ts";
+
+/**
+ * Represents the player in the game
+ * Stores the player's buy power, click amount, upgrades, and buildings that autoclicks
+ */
 
 export default class Player {
     #name: string;
@@ -24,31 +25,34 @@ export default class Player {
 
     constructor(name: string) {
         this.#name = name;
-        this.#currClick = 1;
-        this.#buyPower = 0;
+        this.#currClick = 1; // Defaults to 1 click power
+        this.#buyPower = 0; // Starts with 0 buy power
         this.#upgrades = new Array<Upgrade>();
         this.#buildings = new Array<Building>();
         this.#listeners = new Array<Listener>();
-        // this.fillArray(); // Initializes the player with all available upgrades at level 0
         this.#notifyAll();
+        this.#checkName();
         this.#checkMoney();
         this.#checkClick();
     }
 
+    /**
+     * Starts automatic clickers for buildings that the player has purchased.
+     *
+     * Side effects: starts timers that increase buy power and notify listeners.
+     */
     public startBuildingAutoClickers(): void {
-        for (let i = 0; i < this.#buildings.length; i++) {
+        for (let i = 0; i < this.#buildings.length; i++) { // Check every building because a player may own more than one
             const building = this.#buildings[i];
 
-            building.startAutoClicker(
-                (amount: number) => {
-                    this.#buyPower += amount;
-
-                    this.#checkMoney();
-                    this.#notifyAll();
-                }
-            );
+            if (building.upgradeLevel > 0) { // Level zero means the building has not been purchased
+                building.startAutoClicker((amount: number) => {
+                    this.#addAutomaticBuyPower(amount);
+                });
+            }
         }
     }
+
     get name(): string {
         return this.#name;
     }
@@ -81,17 +85,6 @@ export default class Player {
         this.#account = account;
     }
 
-    /**
-     * Sets the player's current buy power to the given value, used for testing
-     * @param value the new amount of buy power. Must be greater than or equal to 0.
-     * Postcondition: the player's buy power is equal to value.
-     * Side effects: Changes the player's current buy power.
-     */
-    set updatedBuyPower(value: number) {
-        this.#checkMoney();
-        this.#buyPower = value;
-        this.#checkMoney();
-    }
 
 
     /**
@@ -106,27 +99,16 @@ export default class Player {
     }
 
     /**
-     * Gets current level of the specified upgrade
-     * @param type the type of upgrade whose level is being retrieved
-     *             Must be a valid UpgradeType.
-     * @return the current level of the matching upgrade, or 0 if no
-     *         matching upgrade is found.
-     * Postcondition: the player's state is unchanged.
+     * Gets the current level of an upgrade or building
+     *
+     * @param type The type being searched for
+     * @return The current level or zero when the type is not found
+     * Postcondition: The player's state is unchanged
      */
-    // findUpgradeLevel(type: UpgradeType): number {
-    //     let level = 0;
-    //     for (let i = 0; i < this.#upgrades.length; i++) {
-    //         if (this.#upgrades[i].upgradeName === type) {
-    //             level = this.#upgrades[i].upgradeLevel;
-    //         }
-    //     }
-    //     return level;
-    // }
-
     findUpgradeLevel(type: UpgradeType): number {
         let level = 0;
 
-        // Check the regular upgrades
+        // Searches the regular upgrades until the matching type is found
         for (let i = 0; i < this.#upgrades.length; i++) {
             if (this.#upgrades[i].upgradeName === type) {
                 level = this.#upgrades[i].upgradeLevel;
@@ -142,24 +124,13 @@ export default class Player {
 
         return level;
     }
-
     /**
-     * Gets current price of the specified upgrade
-     * @param type the type of upgrade whose price is being retrieved
-     * Must be a valid UpgradeType
-     * @return the current price of the matching upgrade, or 0 if no matching upgrade is found
-     * Postcondition: the player's state is unchanged
+     * Gets the current price of an upgrade or building
+     *
+     * @param type The type being searched for
+     * @return The current price or zero when the type is not found
+     * Postcondition: The player's state is unchanged
      */
-    // findPrice(type: UpgradeType): number {
-    //     let price = 0;
-    //     for (let i = 0; i < this.#upgrades.length; i++) {
-    //         if (this.#upgrades[i].upgradeName === type) {
-    //             price = this.#upgrades[i].buyPowerCost;
-    //         }
-    //     }
-    //     return price;
-    // }
-
     findPrice(type: UpgradeType): number {
         let price = 0;
 
@@ -180,16 +151,26 @@ export default class Player {
         return price;
     }
 
-
+    /**
+     * Attempts to purchase an upgrade the player can afford
+     *
+     * @param upgrade The upgrade or building being purchased
+     * @return True when the purchase succeeds and false otherwise
+     * Side effects: May change buy power, click amount, level and cost
+     */
     #purchaseUpgrade(upgrade: Upgrade): boolean {
         let purchaseSuccessful = false;
         const cost = upgrade.buyPowerCost;
 
+        // Only continue when the player has enough buy power
         if (this.#buyPower >= cost) {
             this.#buyPower -= cost;
 
+            // Increases the level and calculates the cost of the next purchase
             upgrade.increaseLevel();
             upgrade.updateBuyPowerCost();
+
+            // Buildings produce buy power automatically over time (autoclicking)
              if (upgrade instanceof Building) {
                 upgrade.startAutoClicker((amount: number) => {
                     this.#buyPower += amount;
@@ -205,58 +186,31 @@ export default class Player {
             this.#notifyAll();
 
             purchaseSuccessful = true;
+        }else{
+            throw new InsufficientBuyPowerError();
         }
 
         return purchaseSuccessful;
     }
 
     /**
-     * Adds all available upgrades to the player's upgrade list
-     * Postcondition: the upgrade list contains a Financial Advisor and Employer
-     * Side effects: adds upgrades to the list and notifies listeners
+     * Attempts to purchase the specified regular upgrade
+     *
+     * @param type the type of regular upgrade being purchased
+     * @return the purchased upgrade, or null if it was not found or the
+     * player could not afford it
+     * Side effects: may decrease buy power, increase the upgrade level,
+     * increase the upgrade cost and increase the current click amount
      */
-    // fillArray(): void {
-    //     // 15,20 financial
-    //     //20, 100 employer
-    //     this.#upgrades.push(new Upgrade(UpgradeType.FinancialAdvisor, 0, 20, 50));
-    //     this.#upgrades.push(new Upgrade(UpgradeType.Employer, 0, 20, 100));
-    //     // this.#upgrades.push(upgrade);
-    //     // this.#upgrades.push(new Employer());
-    //
-    //         const banker = new Building(
-    //             UpgradeType.Banker,
-    //             0,      // starting level
-    //             20,     // starting production
-    //             200,    // starting cost
-    //             1000    // interval speed in milliseconds
-    //         );
-    //
-    //         const royalMint = new Building(
-    //             UpgradeType.RoyalMint,
-    //             0,
-    //             40,
-    //             500,
-    //             1000
-    //         );
-    //
-    //         this.#buildings.push(banker);
-    //         this.#buildings.push(royalMint);
-    // }
-
     public purchaseByName(type: UpgradeType): Upgrade | null {
         let purchasedUpgrade: Upgrade | null = null;
         let found = false;
 
-        for (
-            let i = 0;
-            i < this.#upgrades.length && !found;
-            i++
-        ) {
-            if (this.#upgrades[i].upgradeName === type) {
+        for (let i = 0; i < this.#upgrades.length && !found; i++) {
+            if (this.#upgrades[i].upgradeName === type) { // Search until the matching upgrade is found
                 found = true;
 
-                const purchaseSuccessful =
-                    this.#purchaseUpgrade(this.#upgrades[i]);
+                const purchaseSuccessful = this.#purchaseUpgrade(this.#upgrades[i]);
 
                 if (purchaseSuccessful) {
                     purchasedUpgrade = this.#upgrades[i];
@@ -266,18 +220,23 @@ export default class Player {
 
         return purchasedUpgrade;
     }
+
+    /**
+     * Attempts to purchase a building by its type
+     *
+     * @param type The type of building being purchased
+     * @return The purchased building or null when the purchase fails
+     * Side effects: May change buy power, building level and building cost
+     */
+
     public purchaseBuilding(type: UpgradeType): Building | null {
         let purchasedBuilding: Building | null = null;
         let found = false;
 
-        for (
-            let i = 0;
-            i < this.#buildings.length && !found;
-            i++
-        ) {
+        for (let i = 0; i < this.#buildings.length && !found; i++) {
             const building = this.#buildings[i];
 
-            if (building.upgradeName === type) {
+            if (building.upgradeName === type) { // Search until the matching building is found
                 found = true;
 
                 if (this.#buyPower >= building.buyPowerCost) {
@@ -286,8 +245,7 @@ export default class Player {
                     building.increaseLevel();
                     building.updateBuyPowerCost();
 
-                    building.startAutoClicker(
-                        (amount: number) => {
+                    building.startAutoClicker((amount: number) => {
                             this.#addAutomaticBuyPower(amount);
                         }
                     );
@@ -296,6 +254,8 @@ export default class Player {
                     this.#notifyAll();
 
                     purchasedBuilding = building;
+                }else{
+                    throw new InsufficientBuyPowerError();
                 }
             }
         }
@@ -303,13 +263,18 @@ export default class Player {
         return purchasedBuilding;
     }
 
+    /**
+     * Adds buy power produced by a building
+     *
+     * @param amount The amount being added to the player's buy power
+     * Side effects: Changes buy power and notifies listeners
+     */
     #addAutomaticBuyPower(amount: number): void {
         this.#buyPower += amount;
 
         this.#checkMoney();
         this.#notifyAll();
     }
-
 
     set buyPower(value: number) {
         this.#buyPower = value;
@@ -332,14 +297,18 @@ export default class Player {
 
     set upgrades(upgrades: Array<Upgrade>) {
         this.#upgrades = upgrades;
+        this.#checkUpgrades();
     }
 
     get buildings(): ReadonlyArray<Building> {
         return this.#buildings;
+
     }
 
     set buildings(buildings: Array<Building>) {
         this.#buildings = buildings;
+        this.#checkBuildings();
+
     }
     registerListener(listener: Listener): void {
         this.#listeners.push(listener);
@@ -356,5 +325,17 @@ export default class Player {
     #checkClick(): void {
         assert(this.#currClick >= 0, "currentClick can't be negative");
     }
-
+    #checkName(): void {
+        assert(this.#name.trim().length > 0, "player name can't be empty");
+    }
+    #checkUpgrades(): void {
+        for (const upgrade of this.#upgrades) {
+            assert(upgrade !== null && upgrade !== undefined, "upgrade can't be null");
+        }
+    }
+    #checkBuildings(): void {
+        for (const building of this.#buildings) {
+            assert(building !== null && building !== undefined, "building can't be null");
+        }
+    }
 }

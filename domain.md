@@ -12,8 +12,12 @@ classDiagram
 class Account {
     - ~String username
     - String password
-    - ?Player player
+    - Player player
     + buildAccount()
+    +createAccount(username, password) Promise
+    +login(username, password) Promise
+    +getPlayer() Player
+    +getUsername() string
 }
 
 note for Account "Class Invariants:
@@ -50,10 +54,17 @@ note for Player "Class Invariants:
 <li>for each item in upgrades, item != null</li>
 </ul>"
 
-
+    class UpgradeType {
+        <<enumeration>>
+        FinancialAdvisor
+        Employer
+        Banker
+        RoyalMint
+    }
+    
 class Upgrade {
     - ~integer id
-    - String upgradeName
+    - UpgradeType upgradeName
     - int upgradeLevel
     - int upgradeProduction
     - int buyPowerCost
@@ -78,9 +89,9 @@ note for Upgrade "Class Invariants:
 class Building {
     - ~integer id
     - int intervalSpeed
-    + calculateProduction(level) int
-    + calculateCost(level) int
-    + autoClick() void
+    + startAutoClicker(addBuyPower) void
+    - autoClick(addBuyPower) void
+    + getIntervalSpeed() number
 }
 
 note for Building "Class Invariants:
@@ -98,17 +109,9 @@ Player "1" o--* "*" Upgrade : owns
 Upgrade "1" o--* "1" Building : may have building data
 
 Upgrade <|-- Building : inherits
+Upgrade --> UpgradeType : uses
+Building --> UpgradeType : uses
 ```
 
 
-## Changes since phase 1
 
-* `Upgrade` became the superclass extended by `Building`.
-* Removed the separate `Employer` and `FinancialAdvisor` classes because they are represented as instances of `Upgrade`.
-* Added a unique ID to `Player`.
-* Added a unique ID to `Upgrade`.
-* Added a unique ID to `Building`.
-* Added a one-to-zero-or-one relationship between `Upgrade` and `Building`.
-* Each `Building` uses the ID of an existing `Upgrade`.
-* A Player cannot have two Upgrades with the same `upgradeName`.
-* `UpgradeType` is planned for later and is not currently part of the active data model.

@@ -11,27 +11,29 @@ and `Money` should increment by 1. Viewing available upgrades could be done by c
 From there, choose from two upgrades to purchase, `Financial Advisor` and `Employer`.
 Each upgrades cost more as the level increases, but so does the amount of money you make everytime you click! 
 ---
-# Phase 2 Design Submission 2
+# Phase 2 Implementation Notes
 ---
-- Upgrade is the superclass of Building, while upgrade types such as Employer 
-- and FinancialAdvisor are represented as instances of Upgrade. A Building uses the same ID as an existing Upgrade, 
-- meaning every Building belongs to one Upgrade, but not every Upgrade is a Building. The direct player-building relationship was removed because 
-- Buildings already belong to a player through their related Upgrade
-- Unique IDs and relationship constraints were also added to keep the domain model consistent with the database
+# Accessing the REPL
+- The PGlite REPL is on the top left of the screen during account log in/creation and is near the bottom of the page after.
+- Select Show/Hide REPL to open it
 
-- Updated flowchart and DDL to be more consistent with the domain model
----
-# Phase 2 Design Changes
----
-- Created flowchart for sign in, create account and autoclicker 
-- Changed my upgrades class to a superclass, building class will now inherit from upgrades and I will just make instance of buildings class.
-- as well as instances of upgrades rather than different classes implementing an interface 
-- Created sql table for future persistence
-- Made changes to domain model for account creation and buildings. Added constraints and adhered to comp 2452 conventions
-- Added repl.html
+# Account and login
+- Enter a username and password
+- Select **Create Account** to make a new account
+- Select **Log In** to load an existing account
+- The player’s buy power, click amount, upgrades and buildings are loaded from the database
+- Passwords are nto stored as plain text, salt is used for each pass and are hashed using PBKDF2 with SHA-256
+- During login, the entered password is hashed again and compared with the saved hash
+
+# Buildings and persistence
+- Buildings are special upgrades that automatically produce buy power after being purchased
+- Each building has a level, production amount, cost and interval speed
+- The auto-clicker uses a timer to add buy power at the building’s set interval
+- Purchasing the building the first time will start the autoclicker and will go on forever till user is logged out
+- Building levels, costs, production and interval speeds are saved in the database
+- When a player logs in, their saved buildings are loaded and purchased auto clickers restart
 ---
 
----
 
 # Running
 ---
