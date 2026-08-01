@@ -114,24 +114,7 @@ export default class MoneyController {
      * @param upgradeName The type of upgrade being purchased
      * Side effects: May change and save the player's money and upgrade
      */
-    // public async purchaseUpgrade(upgradeName: UpgradeType): Promise<void> {
-    //     if (this.#account !== undefined) {
-    //         const player = this.#account.player;
-    //
-    //         // A null result means the upgrade was not found or could not be purchased
-    //         const purchasedUpgrade = player.purchaseByName(upgradeName);
-    //
-    //         if (purchasedUpgrade !== null) {
-    //             const persistence = new PlayerPersistence(player);
-    //
-    //             // Save the money spent and get the player's database ID
-    //             const playerId = await persistence.savePlayer();
-    //
-    //             // Saves the new level, cost and production
-    //             await persistence.saveUpgrade(purchasedUpgrade, playerId);
-    //         }
-    //     }
-    // }
+
     public async purchaseUpgrade(
         upgradeName: UpgradeType
     ): Promise<void> {

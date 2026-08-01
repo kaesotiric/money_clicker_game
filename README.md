@@ -32,6 +32,7 @@ Each upgrades cost more as the level increases, but so does the amount of money 
 - Purchasing the building the first time will start the autoclicker and will go on forever till user is logged out
 - Building levels, costs, production and interval speeds are saved in the database
 - When a player logs in, their saved buildings are loaded and purchased auto clickers restart
+- 
 ---
 
 
