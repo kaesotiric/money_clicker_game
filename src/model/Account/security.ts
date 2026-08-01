@@ -11,7 +11,7 @@ export default class Security {
     /**
      * Converts a hex string back into a byte array.
      */
-    #fromHex(hex: string): Uint8Array {
+    #fromHex(hex: string): Uint8Array<ArrayBuffer> {
         if (hex.length % 2 !== 0) {
             throw new Error("Invalid hexadecimal value");
         }
@@ -19,7 +19,8 @@ export default class Security {
         const bytes = new Uint8Array(hex.length / 2);
 
         for (let i = 0; i < hex.length; i += 2) {
-            bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+            bytes[i / 2] =
+                parseInt(hex.substring(i, i + 2), 16);
         }
 
         return bytes;
@@ -30,14 +31,14 @@ export default class Security {
      */
     async #deriveHash(
         password: string,
-        salt: Uint8Array
-    ): Promise<Uint8Array> {
+        salt: Uint8Array<ArrayBuffer>
+    ): Promise<Uint8Array<ArrayBuffer>> {
         const encoder = new TextEncoder();
 
         const keyMaterial = await crypto.subtle.importKey(
             "raw",
             encoder.encode(password),
-            {name: "PBKDF2"},
+            { name: "PBKDF2" },
             false,
             ["deriveBits"]
         );

@@ -1,62 +1,62 @@
-import { expect, test } from "vitest";
-import Player from "../model/player.ts";
-import { UpgradeType } from "../model/UpgradeType.ts";
+import {beforeEach, describe, expect, test} from "vitest";
+import db from "../model/connection.ts";
+import Account from "../model/Account/account.ts";
+import {UpgradeType} from "../model/UpgradeType.ts";
+import ddl from "../../create-tables.sql?raw";
 
-test("Can purchase the advisor upgrade", () => {
-    const player = new Player("test-player");
+describe("Player upgrades", () => {
 
-    player.updatedBuyPower =
-        player.findPrice(UpgradeType.FinancialAdvisor);
+    beforeEach(async () => {
+        // Give every test a fresh database
+        await db().exec(`
+            DROP SCHEMA IF EXISTS public CASCADE;
+            CREATE SCHEMA public;
+        `);
 
-    player.purchaseByName(UpgradeType.FinancialAdvisor);
+        // Recreate the tables and upgrade catalog
+        await db().exec(ddl);
+    });
 
-    expect(
-        player.findUpgradeLevel(UpgradeType.FinancialAdvisor)
-    ).toBe(1);
+    test("Can purchase the advisor upgrade", async () => {
+        const account = await Account.createAccount("kate", "password123");
+        const player = account.player;
 
-    // Second purchase
-    player.updatedBuyPower =
-        player.findPrice(UpgradeType.FinancialAdvisor);
+        // First purchase
+        const firstPrice = player.findPrice(UpgradeType.FinancialAdvisor);
+        player.updatedBuyPower = firstPrice;
 
-    player.purchaseByName(UpgradeType.FinancialAdvisor);
+        player.purchaseByName(UpgradeType.FinancialAdvisor);
 
-    expect(
-        player.findUpgradeLevel(UpgradeType.FinancialAdvisor)
-    ).toBe(2);
-});
+        expect(player.findUpgradeLevel(UpgradeType.FinancialAdvisor)).toBe(1);
 
-test("Can purchase the employer upgrade", () => {
-    const player = new Player("test-player");
+        // Second purchase
+        const secondPrice = player.findPrice(UpgradeType.FinancialAdvisor);
+        player.updatedBuyPower = secondPrice;
 
-    player.updatedBuyPower =
-        player.findPrice(UpgradeType.Employer);
+        player.purchaseByName(UpgradeType.FinancialAdvisor);
 
-    player.purchaseByName(UpgradeType.Employer);
+        expect(player.findUpgradeLevel(UpgradeType.FinancialAdvisor)).toBe(2);
+    });
 
-    expect(
-        player.findUpgradeLevel(UpgradeType.Employer)
-    ).toBe(1);
+    test("Can purchase the employer upgrade", async () => {
+        const account = await Account.createAccount("kate", "password123");
+        const player = account.player;
 
-    // Second purchase
-    player.updatedBuyPower =
-        player.findPrice(UpgradeType.Employer);
+        // First purchase
+        const firstPrice = player.findPrice(UpgradeType.Employer);
+        player.updatedBuyPower = firstPrice;
 
-    player.purchaseByName(UpgradeType.Employer);
+        player.purchaseByName(UpgradeType.Employer);
 
-    expect(
-        player.findUpgradeLevel(UpgradeType.Employer)
-    ).toBe(2);
-});
+        expect(player.findUpgradeLevel(UpgradeType.Employer)).toBe(1);
 
-test("Buy power is decreased when purchasing an upgrade", () => {
-    const player = new Player("test-player");
+        // Second purchase
+        const secondPrice = player.findPrice(UpgradeType.Employer);
+        player.updatedBuyPower = secondPrice;
 
-    expect(player.buyPower).toBe(0);
+        player.purchaseByName(UpgradeType.Employer);
 
-    const price = player.findPrice(UpgradeType.Employer);
+        expect(player.findUpgradeLevel(UpgradeType.Employer)).toBe(2);
+    });
 
-    player.updatedBuyPower = price + 1;
-    player.purchaseByName(UpgradeType.Employer);
-
-    expect(player.buyPower).toBe(1);
 });

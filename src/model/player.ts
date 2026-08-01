@@ -7,12 +7,9 @@ import assert from "../assertions.ts";
 import type Listener from "./listener.ts";
 import Upgrade from "./upgrade.ts";
 import {UpgradeType} from "./UpgradeType.ts";
-import db from "./connection.ts";
 import type Account from "./Account/account.ts";
 import Building from "./building.ts";
-import UnknownUpgradeTypeError from "./ErrorMethods/UnknownUpgradeTypeError.ts";
 import PlayerIdNotFoundError from "./ErrorMethods/PlayerIDNotFoundError.ts";
-import NoPLayerFoundError from "./ErrorMethods/NoPlayerFoundError.ts";
 import NoAccountFoundError from "./ErrorMethods/NoAccountFoundError.ts";
 
 export default class Player {
@@ -32,7 +29,7 @@ export default class Player {
         this.#upgrades = new Array<Upgrade>();
         this.#buildings = new Array<Building>();
         this.#listeners = new Array<Listener>();
-        this.fillArray(); // Initializes the player with all available upgrades at level 0
+        // this.fillArray(); // Initializes the player with all available upgrades at level 0
         this.#notifyAll();
         this.#checkMoney();
         this.#checkClick();
@@ -66,314 +63,7 @@ export default class Player {
     set id(id: number){
         this.#id = id;
     }
-    //Write a class static method that will get access to all players in the database
-    //returns all players in the database, it promises to contain an array of players
-    static async getAllPLayers(): Promise<Array<Player>> {
-        const allPLayers = new Array<Player>();
-        //
-        let results = await db()
-            .query<{playername: string}>("select playername from player"); // Asking PGLite to give us data from db
-        // We then need to transform those rows into instances of Player
 
-        results.rows.forEach((row) => {
-            allPLayers.push(new Player(row.playername));
-        })
-        return allPLayers;
-    }
-
-
-    public async savePlayer(): Promise<number> {
-        const results = await db().query<{ id: number }>(
-            `
-                UPDATE player
-                SET
-                    buypower = $1,
-                    curr_click = $2
-                WHERE account = $3
-                    RETURNING id, buypower, curr_click;
-            `,
-            [
-                this.#buyPower,
-                this.#currClick,
-                this.account.username
-            ]
-        );
-
-        if (results.rows.length === 0) {
-            throw new NoPLayerFoundError();
-        }
-
-        return results.rows[0].id;
-    }
-
-    public async saveUpgrade(
-        upgrade: Upgrade,
-        playerId: number
-    ): Promise<void> {
-        const results = await db().query(
-            `
-        UPDATE upgrade_inventory
-        SET
-            upgrade_level = $1,
-            upgrade_production = $2,
-            buypower_cost = $3
-        WHERE player_id = $4
-          AND upgrade_name = $5;
-        `,
-            [
-                upgrade.upgradeLevel,
-                upgrade.productionValue,
-                upgrade.buyPowerCost,
-                playerId,
-                upgrade.upgradeName
-            ]
-        );
-
-        if (results.affectedRows === 0) {
-            throw new Error("Upgrade was not found in the player's inventory.");
-        }
-    }
-    public async saveBuilding(
-        building: Building,
-        playerId: number
-    ): Promise<void> {
-        const upgradeResult = await db().query(
-            `
-                UPDATE upgrade_inventory
-                SET
-                    upgrade_level = $1,
-                    upgrade_production = $2,
-                    buypower_cost = $3
-                WHERE player_id = $4
-                  AND upgrade_name = $5;
-            `,
-            [
-                building.upgradeLevel,
-                building.productionValue,
-                building.buyPowerCost,
-                playerId,
-                building.upgradeName
-            ]
-        );
-
-        if (upgradeResult.affectedRows === 0) {
-            throw new Error(
-                "Upgrade was not found in the player's inventory."
-            );
-        }
-
-        const buildingResult = await db().query(
-            `
-        UPDATE buildings
-        SET interval_speed = $1
-        WHERE upgrade_id = (
-            SELECT id
-            FROM upgrade_inventory
-            WHERE player_id = $2
-              AND upgrade_name = $3
-        );
-        `,
-            [
-                building.intervalSpeed,
-                playerId,
-                building.upgradeName
-            ]
-        );
-
-        if (buildingResult.affectedRows === 0) {
-            throw new Error(
-                "Building was not found in the buildings table."
-            );
-        }
-    }
-
-    public async loadUpgrade(): Promise<void> {
-        const results = await db().query<{
-            id: number;
-            upgrade_name: UpgradeType;
-            upgrade_level: number;
-            upgrade_production: number;
-            buypower_cost: number;
-            player_id: number;
-        }>(
-            `
-                SELECT
-                    id,
-                    upgrade_name,
-                    upgrade_level,
-                    upgrade_production,
-                    buypower_cost,
-                    player_id
-                FROM upgrade_inventory
-                WHERE player_id = $1
-                  AND upgrade_name IN (
-                    SELECT name
-                    FROM upgrade_catalog
-                    WHERE LOWER(TRIM(upgrade_kind)) <> 'BUILDING'
-                )
-                ORDER BY id;
-            `,
-            [this.#id]
-        );
-
-        const upgrades: Upgrade[] = this.#upgrades;
-
-        for (const row of results.rows) {
-            const upgradeType =
-                this.#toUpgradeType(row.upgrade_name);
-
-            const index = upgrades.findIndex(
-                (upgrade) =>
-                    upgrade.upgradeName === upgradeType
-            );
-
-            const loadedUpgrade = new Upgrade(
-                upgradeType,
-                row.upgrade_level,
-                row.upgrade_production,
-                row.buypower_cost
-            );
-
-            if (index >= 0) {
-                upgrades[index] = loadedUpgrade;
-            } else {
-                upgrades.push(loadedUpgrade);
-            }
-        }
-
-        this.#upgrades = upgrades;
-    }
-
-    public async loadBuildings(): Promise<void> {
-        const results = await db().query<{
-            id: number;
-            upgrade_name: UpgradeType;
-            upgrade_level: number;
-            upgrade_production: number;
-            buypower_cost: number;
-            player_id: number;
-        }>(
-            `
-                SELECT
-                    id,
-                    upgrade_name,
-                    upgrade_level,
-                    upgrade_production,
-                    buypower_cost,
-                    player_id
-                FROM upgrade_inventory
-                WHERE player_id = $1
-                  AND upgrade_name IN (
-                    SELECT name
-                    FROM upgrade_catalog
-                    WHERE upgrade_kind = 'BUILDING'
-                )
-                ORDER BY id;
-            `,
-            [this.#id]
-        );
-
-        const buildings: Building[] = this.#buildings;
-
-        for (const row of results.rows) {
-            const intervalResult = await db().query<{
-                interval_speed: number;
-            }>(
-                `
-            SELECT interval_speed
-            FROM buildings
-            WHERE upgrade_id = $1;
-            `,
-                [row.id]
-            );
-
-            if (intervalResult.rows.length === 0) {
-                throw new Error(
-                    `Building information was not found for ${row.upgrade_name}.`
-                );
-            }
-
-            const intervalSpeed =
-                intervalResult.rows[0].interval_speed;
-
-            const upgradeType =
-                this.#toUpgradeType(row.upgrade_name);
-
-            const index = buildings.findIndex(
-                (building) =>
-                    building.upgradeName === upgradeType
-            );
-
-            const loadedBuilding = new Building(
-                upgradeType,
-                row.upgrade_level,
-                row.upgrade_production,
-                row.buypower_cost,
-                intervalSpeed
-            );
-
-            if (index >= 0) {
-                buildings[index] = loadedBuilding;
-            } else {
-                buildings.push(loadedBuilding);
-            }
-        }
-
-        this.#buildings = buildings;
-
-        console.log("Loaded buildings:", this.#buildings);
-    }
-
-    static async getPlayerByAccount(username:string): Promise<Player | null>{
-        const results = await db().query<{
-            id: number;
-            playername: string;
-            buypower: number;
-            curr_click: number;
-            account: string;
-        }>
-        (`select id, playername, buypower, curr_click, account from player where account = $1;`,
-            [username]
-        );
-        const row = results.rows[0];
-        if(!row){
-            return null;
-        }
-        const player = new Player(row.playername);
-        player.#id = row.id;
-        player.#buyPower = row.buypower;
-        player.#currClick = row.curr_click;
-
-        // await player.loadUpgrade(row.id);
-        await player.loadUpgrade();
-        await player.loadBuildings();
-        // Restarts buildings that were already purchased.
-        player.startBuildingAutoClickers();
-
-        player.#checkMoney();
-        player.#checkClick();
-
-        return player;
-
-    }
-    // Converts the string to enum
-    #toUpgradeType(name: string): UpgradeType {
-        let upgradeType: UpgradeType;
-
-        if (name === "Financial Advisor") {
-            upgradeType = UpgradeType.FinancialAdvisor;
-        } else if (name === "Employer") {
-            upgradeType = UpgradeType.Employer;
-        } else if (name === "Royal Mint") {
-            upgradeType = UpgradeType.RoyalMint;
-        } else if  (name === "Banker") {
-            upgradeType = UpgradeType.Banker;
-        } else {
-            throw new UnknownUpgradeTypeError();
-        }
-
-        return upgradeType;
-    }
     get buyPower(): number {
         this.#checkMoney();
         return this.#buyPower;
@@ -525,40 +215,32 @@ export default class Player {
      * Postcondition: the upgrade list contains a Financial Advisor and Employer
      * Side effects: adds upgrades to the list and notifies listeners
      */
-    fillArray(): void {
-        // 15,20 financial
-        //20, 100 employer
-        this.#upgrades.push(new Upgrade(UpgradeType.FinancialAdvisor, 0, 20, 50));
-        this.#upgrades.push(new Upgrade(UpgradeType.Employer, 0, 20, 100));
-        // this.#upgrades.push(upgrade);
-        // this.#upgrades.push(new Employer());
-
-            const banker = new Building(
-                UpgradeType.Banker,
-                0,      // starting level
-                20,     // starting production
-                200,    // starting cost
-                1000    // interval speed in milliseconds
-            );
-
-            const royalMint = new Building(
-                UpgradeType.RoyalMint,
-                0,
-                40,
-                500,
-                1000
-            );
-
-            this.#buildings.push(banker);
-            this.#buildings.push(royalMint);
-    }
-    // getUpgrade(type: UpgradeType): Upgrade {
-    //     for (let i = 0; i < this.#upgrades.length; i++) {
-    //         if (this.#upgrades[i].upgradeName === type) {
-    //             return this.#upgrades[i];
-    //         }
-    //     }
-    //     return new Upgrade(UpgradeType.Employer, 0, 0, 0); // no value
+    // fillArray(): void {
+    //     // 15,20 financial
+    //     //20, 100 employer
+    //     this.#upgrades.push(new Upgrade(UpgradeType.FinancialAdvisor, 0, 20, 50));
+    //     this.#upgrades.push(new Upgrade(UpgradeType.Employer, 0, 20, 100));
+    //     // this.#upgrades.push(upgrade);
+    //     // this.#upgrades.push(new Employer());
+    //
+    //         const banker = new Building(
+    //             UpgradeType.Banker,
+    //             0,      // starting level
+    //             20,     // starting production
+    //             200,    // starting cost
+    //             1000    // interval speed in milliseconds
+    //         );
+    //
+    //         const royalMint = new Building(
+    //             UpgradeType.RoyalMint,
+    //             0,
+    //             40,
+    //             500,
+    //             1000
+    //         );
+    //
+    //         this.#buildings.push(banker);
+    //         this.#buildings.push(royalMint);
     // }
 
     public purchaseByName(type: UpgradeType): Upgrade | null {
@@ -627,25 +309,6 @@ export default class Player {
         this.#checkMoney();
         this.#notifyAll();
     }
-
-    // /**
-    //  * Attempts to purchase an upgrade using its type
-    //  * @param type the type of upgrade being purchased
-    //  * Must be a valid UpgradeType
-    //  * Side effects: may change buyPower, currClick, upgrade level and upgrade cost
-    //  */
-    // purchaseByName(type: UpgradeType): Upgrade | null{
-    //     let purchasedUpgrade: Upgrade | null = null;
-    //     // if(this.#upgrades.upgradeName === type)
-    //     // if (this.#upgrades.length >= 1) {
-    //     for (let i = 0; i < this.#upgrades.length; i++) {
-    //         if (this.#upgrades[i].upgradeName === type) {
-    //             this.#purchaseUpgrade(this.#upgrades[i]); // This will check first if player has enough money
-    //             purchasedUpgrade = this.#upgrades[i];
-    //         }
-    //     }
-    //     return purchasedUpgrade;
-    // }
 
 
     set buyPower(value: number) {
