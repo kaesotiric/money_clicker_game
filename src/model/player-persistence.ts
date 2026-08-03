@@ -87,6 +87,7 @@ export default class PlayerPersistence {
         }
     }
 
+
     /**
      * Saves a building owned by the player
      *
@@ -143,7 +144,6 @@ export default class PlayerPersistence {
 
         if (buildingResult.affectedRows === 0) {
             throw new BuildingNotFoundError();
-
         }
     }
 
@@ -398,4 +398,5 @@ export default class PlayerPersistence {
             [playerId]
         );
     }
+
 }

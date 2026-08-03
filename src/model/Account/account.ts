@@ -144,22 +144,14 @@ export default class Account {
         if (row !== undefined) {
             const security = new Security();
 
-            const passwordMatches = await security.verifyPassword(
-                password,
-                row.password
-            );
+            const passwordMatches = await security.verifyPassword(password, row.password);
 
             // Only load the player when the password is correct
             if (passwordMatches) {
-                const account = new Account(
-                    row.username,
-                    row.password
-                );
+                const account = new Account(row.username, row.password);
 
                 const loadedPlayer =
-                    await PlayerPersistence.getPlayerByAccount(
-                        row.username
-                    );
+                    await PlayerPersistence.getPlayerByAccount(row.username);
 
                 if (loadedPlayer === null) {
                     throw new NoPlayerFoundError();

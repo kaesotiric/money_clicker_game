@@ -11,6 +11,10 @@ and `Money` should increment by 1. Viewing available upgrades could be done by c
 From there, choose from two upgrades to purchase, `Financial Advisor` and `Employer`.
 Each upgrades cost more as the level increases, but so does the amount of money you make everytime you click! 
 ---
+
+# Changes for Phase 2 Resubmission
+- Game starts autosaving every 1 second as soon as the user creates an account or logs in. 
+- 
 # Phase 2 Implementation Notes
 ---
 # Accessing the REPL
@@ -27,14 +31,14 @@ Each upgrades cost more as the level increases, but so does the amount of money 
 
 # Buildings and persistence
 - Buildings are special upgrades that automatically produce buy power after being purchased
-- Each building has a level, production amount, cost and interval speed
+- Each building has a level, production amount, cost and interval speed. Royal mint auto clicks every 1 second and Banker
+- autoclicks every 5 seconds but produces more money overall. 
 - The auto-clicker uses a timer to add buy power at the building’s set interval
 - Purchasing the building the first time will start the autoclicker and will go on forever till user is logged out
 - Building levels, costs, production and interval speeds are saved in the database
 - When a player logs in, their saved buildings are loaded and purchased auto clickers restart
 - 
 ---
-
 
 # Running
 ---

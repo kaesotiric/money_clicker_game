@@ -17,6 +17,7 @@ export default class MoneyController {
     #createUpgradeView?: CreateUpgradeView;
     #moneyView?: MoneyView;
 
+
     constructor() {
         this.#createAccountView = new CreateAccountView(this);
         this.#createAccountView.show();
@@ -40,6 +41,7 @@ export default class MoneyController {
 
             // Open the game using the new player's info
             this.#moneyView = new MoneyView(this.#account.player, this);
+            this.#startAutoSave(this.#account);
 
         } catch (error) {
             if (error instanceof DuplicateUserNameError) {
@@ -71,6 +73,7 @@ export default class MoneyController {
 
         // Opens the game using the player's saved information
         this.#moneyView = new MoneyView(this.#account.player, this);
+        this.#startAutoSave(this.#account);
     }
 
 
@@ -183,4 +186,12 @@ export default class MoneyController {
             }
         }
     }
+    //Saves every 1 second
+    #startAutoSave(account: Account): void {
+       window.setInterval(async () => {
+            const persistence = new PlayerPersistence(account.player);
+            await persistence.savePlayer();
+        }, 1000);
+    }
+
 }
