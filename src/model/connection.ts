@@ -3,10 +3,10 @@ import { PGlite } from "@electric-sql/pglite";
 let database: PGlite;
 
 if (import.meta.env.MODE === "test") {
-    // Vitest uses an in-memory database
+    // Memory database
     database = new PGlite();
 } else {
-    // The browser application uses IndexedDB
+    // The browser application idb
     database = new PGlite("idb://money-clicker");
 }
 

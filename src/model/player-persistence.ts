@@ -250,18 +250,12 @@ export default class PlayerPersistence {
             );
 
             if (intervalResult.rows.length === 0) {
-                throw new Error(
-                    `Building information was not found for ${row.upgrade_name}.`
-                );
+                throw new Error(`Building information was not found for ${row.upgrade_name}.`);
             }
 
-            const intervalSpeed =
-                intervalResult.rows[0].interval_speed;
+            const intervalSpeed = intervalResult.rows[0].interval_speed;
 
-            const upgradeType =
-                PlayerPersistence.#toUpgradeType(
-                    row.upgrade_name
-                );
+            const upgradeType = PlayerPersistence.#toUpgradeType(row.upgrade_name);
 
             const loadedBuilding = new Building(
                 upgradeType,
@@ -276,10 +270,6 @@ export default class PlayerPersistence {
 
         this.#player.buildings = buildings;
 
-        console.log(
-            "Loaded buildings:",
-            this.#player.buildings
-        );
     }
 
     public static async getPlayerByAccount(
@@ -318,8 +308,7 @@ export default class PlayerPersistence {
             player.buyPower = row.buypower;
             player.currClick = row.curr_click;
 
-            const persistence =
-                new PlayerPersistence(player);
+            const persistence = new PlayerPersistence(player);
 
             // Load the upgrades that belong to the saved player
             await persistence.loadUpgrade();
@@ -338,28 +327,39 @@ export default class PlayerPersistence {
     /**
      * Converts a database upgrade name into an UpgradeType enum
      */
-    static #toUpgradeType(
-        name: string
-    ): UpgradeType {
-        let upgradeType: UpgradeType;
-
-        if (name === "Financial Advisor") {
-            upgradeType =
-                UpgradeType.FinancialAdvisor;
-        } else if (name === "Employer") {
-            upgradeType =
-                UpgradeType.Employer;
-        } else if (name === "Royal Mint") {
-            upgradeType =
-                UpgradeType.RoyalMint;
-        } else if (name === "Banker") {
-            upgradeType =
-                UpgradeType.Banker;
-        } else {
-            throw new UnknownUpgradeTypeError();
+    static #toUpgradeType(name: string): UpgradeType {
+        switch (name) {
+            case "Financial Advisor":
+                return UpgradeType.FinancialAdvisor;
+            case "Employer":
+                return UpgradeType.Employer;
+            case "Freelance Contract":
+                return UpgradeType.FreelanceContract;
+            case "Side Business":
+                return UpgradeType.SideBusiness;
+            case "Investment Portfolio":
+                return UpgradeType.InvestmentPortfolio;
+            case "Property Empire":
+                return UpgradeType.PropertyEmpire;
+            case "Tech Startup":
+                return UpgradeType.TechStartup;
+            case "Royal Mint":
+                return UpgradeType.RoyalMint;
+            case "Banker":
+                return UpgradeType.Banker;
+            case "ATM Network":
+                return UpgradeType.ATMNetwork;
+            case "Investment Firm":
+                return UpgradeType.InvestmentFirm;
+            case "Tech Company":
+                return UpgradeType.TechCompany;
+            case "Bank Headquarters":
+                return UpgradeType.BankHeadquarters;
+            case "Global Corporation":
+                return UpgradeType.GlobalCorporation;
+            default:
+                throw new UnknownUpgradeTypeError();
         }
-
-        return upgradeType;
     }
 
     /**

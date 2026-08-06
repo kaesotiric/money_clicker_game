@@ -19,13 +19,11 @@ describe("PlayerPersistence", () => {
     });
 
     test("Saves the player's buy power", async () => {
-        const account =
-            await Account.createAccount("kate", "password123");
+        const account = await Account.createAccount("kate", "password123");
 
         account.player.buyPower = 100;
 
-        const persistence =
-            new PlayerPersistence(account.player);
+        const persistence = new PlayerPersistence(account.player);
 
         await persistence.savePlayer();
 
