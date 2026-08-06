@@ -58,8 +58,18 @@ note for Player "Class Invariants:
         <<enumeration>>
         FinancialAdvisor
         Employer
-        Banker
+        FreelanceContract
+        SideBusiness
+        InvestmentPortfolio
+        PropertyEmpire
+        TechStartup
         RoyalMint
+        Banker
+        ATMNetwork
+        InvestmentFirm
+        TechCompany
+        BankHeadquarters
+        GlobalCorporation
     }
     
 class Upgrade {
