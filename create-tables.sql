@@ -76,27 +76,27 @@ insert into upgrade_catalog
     base_interval_speed
 )
 values
-    -- Starting upgrades
-    ('Financial Advisor', 'UPGRADE', 50, 20, null),
-    ('Employer',          'UPGRADE', 100, 20, null),
-    ('Royal Mint',        'BUILDING', 500, 2, 1000),
-    ('Banker',            'BUILDING', 1000, 10, 5000)
+-- Starting upgrades
+('Financial Advisor', 'UPGRADE', 50, 20, null),
+('Employer', 'UPGRADE', 100, 20, null),
+('Royal Mint', 'BUILDING', 500, 2, 1000),
+('Banker', 'BUILDING', 1000, 10, 5000),
 
-    -- Phase 3 upgrade types
-    ('Freelance Contract',  'UPGRADE',   250,    50,   null),
-    ('Side Business',       'UPGRADE',   500,    100,  null),
-    ('Investment Portfolio','UPGRADE',   1500,   300,  null),
-    ('Property Empire',     'UPGRADE',   5000,   1000, null),
-    ('Tech Startup',        'UPGRADE',   15000,  3000, null),
+-- Phase 3 upgrade types
+('Freelance Contract', 'UPGRADE', 250, 50, null),
+('Side Business', 'UPGRADE', 500, 100, null),
+('Investment Portfolio', 'UPGRADE', 1500, 300, null),
+('Property Empire', 'UPGRADE', 5000, 1000, null),
+('Tech Startup', 'UPGRADE', 15000, 3000, null),
 
-    -- Phase 3 building types
-    ('ATM Network',         'BUILDING',  2500,   30,   4000),
-    ('Investment Firm',     'BUILDING',  7500,   60,   3000),
-    ('Tech Company',        'BUILDING',  20000,  150,  2500),
-    ('Bank Headquarters',   'BUILDING',  50000,  400,  2000),
-    ('Global Corporation',  'BUILDING',  100000, 1000, 1000)
+-- Phase 3 building types
+('ATM Network', 'BUILDING', 2500, 30, 4000),
+('Investment Firm', 'BUILDING', 7500, 60, 3000),
+('Tech Company', 'BUILDING', 20000, 150, 2500),
+('Bank Headquarters', 'BUILDING', 50000, 400, 2000),
+('Global Corporation', 'BUILDING', 100000, 1000, 1000)
 
-    on conflict (name) do nothing;
+on conflict (name) do nothing;
 
 
 

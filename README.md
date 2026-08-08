@@ -3,21 +3,35 @@ title: Player Clicker
 author: Kate Nabo (nabok@myumanitoba.ca)
 date: Summer 2026
 ---
-
 # Overview
 ---
-A money clicker game inspired by the cookie clicker. Click on a button that says `Click Me!` 
-and `Money` should increment by 1. Viewing available upgrades could be done by clicking the button `Upgrade Store`
-From there, choose from two upgrades to purchase, `Financial Advisor` and `Employer`.
-Each upgrades cost more as the level increases, but so does the amount of money you make everytime you click! 
+Money Clicker is an incremental game where players earn money by clicking and use their earnings to purchase 
+upgrades and buildings that increase how much money they can make. Upgrades improve the amount
+earned per click, while buildings generate money automatically over time. Players can create
+an account or log in to save and load their progress from the database. The game also includes 
+automatic saving and a Robo Buy feature that uses a trained Markov chain to automatically 
+choose and purchase items when the player has enough money.
 ---
 
 # Phase 3 Implementation Notes
 ---
-- You can find my UI Assessment in `ui-assessment.md`.
-- Catalog in my ddl has been added 10 items. 5 new buildings and 5 upgrades.
-- No major changes to domain model or flow chart, but I made changes to the enum class to account for the 10 newly added items
----
+- Implemented the RoboBuy feature, it selects the upgrade based on the data it was trained and
+waits until it has enough to purchase that upgrade or building. Next transitions to the
+next state based on probability
+- RoboBuy is automatically toggled to off when user refreshes
+- Made changes to `money-view` and `create-upgrade-view` and added all 10 new buttons to purchase them
+- Changes to `money-controller` to toggle the RoboBuy
+- You can find the training file in `src/training` and the RoboBuy class in `src/model`
+
+# Markov Chain
+To generate the Markov model, You can run the following on the command line or here:
+
+```bash
+npm install -D tsx
+npm run train
+```
+It reads from: `src/training/training.csv`
+and generates: `src/training/model.json`
 
 # Running
 ---
@@ -43,7 +57,6 @@ To check the test coverage, simply run the command
 npx vitest run --coverage
 ```
 ---
-
 
 # Domain Model, Flow diagrams and DDL statements
 ---

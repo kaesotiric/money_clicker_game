@@ -86,7 +86,6 @@ export default class Player {
     }
 
 
-
     /**
      * Increases the player's buy power by the current click amount
      * Postcondition: buy power is increased by currClick
@@ -246,9 +245,8 @@ export default class Player {
                     building.updateBuyPowerCost();
 
                     building.startAutoClicker((amount: number) => {
-                            this.#addAutomaticBuyPower(amount);
-                        }
-                    );
+                        this.#addAutomaticBuyPower(amount);
+                    });
 
                     this.#checkMoney();
                     this.#notifyAll();

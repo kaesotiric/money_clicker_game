@@ -34,6 +34,7 @@ export default class MoneyView implements Listener {
                 <button id="purchase-upgrades">
                     Upgrade Store
                 </button>
+                <button id="robo-buy">Robo Buy: OFF</button>
             </div>
             <br>
         `;
@@ -52,6 +53,10 @@ export default class MoneyView implements Listener {
                 this.#moneyController.showCreateUpgradeView();
             });
 
+        document.querySelector<HTMLButtonElement>("#robo-buy")!.addEventListener("click", () => {
+            const isOn = this.#moneyController.toggleRoboBuy();
+            document.querySelector<HTMLButtonElement>("#robo-buy")!.textContent = `Robo Buy: ${isOn ? "ON" : "OFF"}`;
+        });
 
         this.notify();
     }

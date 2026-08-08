@@ -427,13 +427,27 @@ button {
     transform: translateY(-1px);
 }
 
-#purchase-mint {
+/* Building purchase buttons */
+#purchase-mint,
+#purchase-banker,
+#purchase-atm,
+#purchase-investment-firm,
+#purchase-tech-company,
+#purchase-bank-headquarters,
+#purchase-global-corporation {
     background: #0ba;
     color: white;
     margin-right: 12px;
 }
-#purchase-mint:hover {
-    background: #00bbaaba;
+
+#purchase-mint:hover,
+#purchase-banker:hover,
+#purchase-atm:hover,
+#purchase-investment-firm:hover,
+#purchase-tech-company:hover,
+#purchase-bank-headquarters:hover,
+#purchase-global-corporation:hover {
+    background: #009f91;
     transform: translateY(-1px);
 }
 /* =========================
@@ -472,17 +486,25 @@ button {
 
 /* Upgrade purchase buttons */
 #purchase-advisor,
-#purchase-employer {
+#purchase-employer,
+#purchase-freelance,
+#purchase-side-business,
+#purchase-investment-portfolio,
+#purchase-property-empire,
+#purchase-tech-startup {
     background: #8b3fd1;
     color: white;
-
     margin-right: 12px;
 }
 
 #purchase-advisor:hover,
-#purchase-employer:hover {
+#purchase-employer:hover,
+#purchase-freelance:hover,
+#purchase-side-business:hover,
+#purchase-investment-portfolio:hover,
+#purchase-property-empire:hover,
+#purchase-tech-startup:hover {
     background: #7630ba;
-
     transform: translateY(-1px);
 }
 
@@ -826,4 +848,5 @@ button {
     .account-field input {
         transition: none;
     }
+
 }

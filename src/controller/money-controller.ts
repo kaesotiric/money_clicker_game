@@ -1,5 +1,3 @@
-
-
 import MoneyView from "../view/money-view.ts";
 import CreateUpgradeView from "../view/create-upgrade-view.ts";
 import CreateAccountView from "../view/create-account-view.ts";
@@ -9,10 +7,12 @@ import PlayerPersistence from "../model/player-persistence.ts";
 import DuplicateUserNameError from "../model/ErrorMethods/DuplicateUserNameError.ts";
 import NoAccountFoundError from "../model/ErrorMethods/NoAccountFoundError.ts";
 import InsufficientBuyPowerError from "../model/ErrorMethods/InsufficientBPError.ts";
+import RoboBuy from "../model/RoboBuy";
 
 
 export default class MoneyController {
     #account?: Account;
+    #roboBuy: RoboBuy;
     #createAccountView?: CreateAccountView;
     #createUpgradeView?: CreateUpgradeView;
     #moneyView?: MoneyView;
@@ -21,6 +21,7 @@ export default class MoneyController {
     constructor() {
         this.#createAccountView = new CreateAccountView(this);
         this.#createAccountView.show();
+        this.#roboBuy = new RoboBuy();
     }
 
     /**
@@ -87,6 +88,7 @@ export default class MoneyController {
             try {
                 const player = this.#account.player;
                 player.click(); // Updates the player in memory first
+                this.#roboBuy.run(this.#account.player);
                 const persistence = new PlayerPersistence(player);
                 await persistence.savePlayer(); // Saves the new buy power after the click
 
@@ -118,9 +120,7 @@ export default class MoneyController {
      * Side effects: May change and save the player's money and upgrade
      */
 
-    public async purchaseUpgrade(
-        upgradeName: UpgradeType
-    ): Promise<void> {
+    public async purchaseUpgrade(upgradeName: UpgradeType): Promise<void> {
         if (this.#account !== undefined) {
             try {
                 const player = this.#account.player;
@@ -129,6 +129,7 @@ export default class MoneyController {
                 const purchasedUpgrade = player.purchaseByName(upgradeName);
 
                 if (purchasedUpgrade !== null) {
+                    this.#roboBuy.setState(upgradeName); // **
                     const persistence = new PlayerPersistence(player);
 
                     // Save the money spent on the upgrade
@@ -155,12 +156,9 @@ export default class MoneyController {
      * @throws NoAccountFoundError When no account is logged in
      * Side effects: May change and save the player's money and building
      */
-    public async purchaseBuilding(
-        type: UpgradeType
-    ): Promise<void> {
-        if (this.#account === undefined) {
-            throw new NoAccountFoundError();
-        } else {
+    public async purchaseBuilding(type: UpgradeType): Promise<void> {
+        if (this.#account === undefined) {throw new NoAccountFoundError();}
+        else {
             try {
                 const player = this.#account.player;
 
@@ -168,6 +166,7 @@ export default class MoneyController {
                 const building = player.purchaseBuilding(type);
 
                 if (building !== null) {
+                    this.#roboBuy.setState(type);
                     const persistence = new PlayerPersistence(player);
 
                     // Save the money spent and get the player's database ID
@@ -189,9 +188,20 @@ export default class MoneyController {
     //Saves every 1 second
     #startAutoSave(account: Account): void {
        window.setInterval(async () => {
-            const persistence = new PlayerPersistence(account.player);
+           this.#roboBuy.run(account.player); // RoboBuy will run here to check if it can purchase anything
+           const persistence = new PlayerPersistence(account.player);
             await persistence.savePlayer();
         }, 1000);
+    }
+
+    public toggleRoboBuy(): boolean {
+        this.#roboBuy.toggle();
+
+        if (this.#roboBuy.isOn && this.#account !== undefined) {
+            this.#roboBuy.run(this.#account.player);
+        }
+
+        return this.#roboBuy.isOn;
     }
 
 }
