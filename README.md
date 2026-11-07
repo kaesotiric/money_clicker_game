@@ -4,14 +4,7 @@ author: Kate Nabo (nabok@myumanitoba.ca)
 date: Summer 2026
 ---
 # Overview
----
-Money Clicker is an incremental game where players earn money by clicking and use their earnings to purchase 
-upgrades and buildings that increase how much money they can make. Upgrades improve the amount
-earned per click, while buildings generate money automatically over time. Players can create
-an account or log in to save and load their progress from the database. The game also includes 
-automatic saving and a Robo Buy feature that uses a trained Markov chain to automatically 
-choose and purchase items when the player has enough money.
----
+- This is a money clicker game built for a second year course COMP-2452 at University of Manitoba
 
 # Phase 3 Implementation Notes
 ---
