@@ -1,393 +1,359 @@
 /**
- * Displays the upgrade store
- * Shows upgrade levels and prices and sends purchase actions to the controller
+ * Permanent upgrade store
+ * Displays live upgrade levels, prices and bonuses beside the game
  */
 
 import type MoneyController from "../controller/money-controller.ts";
 import type Player from "../model/player.ts";
 import type Listener from "../model/listener.ts";
-import {UpgradeType} from "../model/UpgradeType.ts";
+import { UpgradeType } from "../model/UpgradeType.ts";
+
+type ShopItem = {
+    id: string;
+    name: string;
+    type: UpgradeType;
+    category: "upgrade" | "building";
+};
 
 export default class CreateUpgradeView implements Listener {
     #player: Player;
     #controller: MoneyController;
-    #dialog: HTMLDialogElement;
+    #store: HTMLElement;
+    #roboNotices: Array<{type: UpgradeType; count: number}> = [];
+    #roboNoticeTimer?: number;
+    #previousLevels = new Map<UpgradeType, number>();
+
+
+    // These IDs match your old CSS, prices, and button handlers
+    #items: ShopItem[] = [
+        { id: "advisor", name: "Financial Advisor", type: UpgradeType.FinancialAdvisor, category: "upgrade" },
+        { id: "employer", name: "Employer", type: UpgradeType.Employer, category: "upgrade" },
+        { id: "freelance", name: "Freelance Contract", type: UpgradeType.FreelanceContract, category: "upgrade" },
+        { id: "side-business", name: "Side Business", type: UpgradeType.SideBusiness, category: "upgrade" },
+        { id: "investment-portfolio", name: "Investment Portfolio", type: UpgradeType.InvestmentPortfolio, category: "upgrade" },
+        { id: "property-empire", name: "Property Empire", type: UpgradeType.PropertyEmpire, category: "upgrade" },
+        { id: "tech-startup", name: "Tech Startup", type: UpgradeType.TechStartup, category: "upgrade" },
+        { id: "mint", name: "Royal Mint", type: UpgradeType.RoyalMint, category: "building" },
+        { id: "banker", name: "Banker", type: UpgradeType.Banker, category: "building" },
+        { id: "atm", name: "ATM Network", type: UpgradeType.ATMNetwork, category: "building" },
+        { id: "investment-firm", name: "Investment Firm", type: UpgradeType.InvestmentFirm, category: "building" },
+        { id: "tech-company", name: "Tech Company", type: UpgradeType.TechCompany, category: "building" },
+        { id: "bank-headquarters", name: "Bank Headquarters", type: UpgradeType.BankHeadquarters, category: "building" },
+        { id: "global-corporation", name: "Global Corporation", type: UpgradeType.GlobalCorporation, category: "building" }
+    ];
 
     constructor(player: Player, controller: MoneyController) {
         this.#player = player;
         this.#controller = controller;
+
+        // Put the game and store in the SAME grid container
+        const app = document.querySelector<HTMLElement>("#app");
+        if (app === null) {
+            throw new Error("Money Clicker #app container was not found");
+        }
+
+        let layout = document.querySelector<HTMLDivElement>("#money-layout");
+        if (layout === null) {
+            layout = document.createElement("div");
+            layout.id = "money-layout";
+            app.parentElement?.insertBefore(layout, app);
+            layout.appendChild(app);
+        }
+
+        // An aside behaves like a normal page panel, unlike a dialog
+        this.#store = document.createElement("aside");
+        this.#store.id = "upgrade-store";
+        this.#store.className = "money-sidebar";
+        this.#store.hidden = true;
+
+        this.#store.innerHTML = `
+            <h2>Upgrade Store</h2>
+            <p>Grow your earnings, one upgrade at a time.</p>
+            <div id="upgrade-error" class="game-warning" role="alert" hidden></div>
+
+            <div id="mc-robo-notice" class="mc-robo-notice" role="status" aria-live="polite" hidden>
+                <span class="mc-robo-notice-icon" aria-hidden="true">↻</span>
+                <div class="mc-robo-notice-copy">
+                    <strong>ROBOBUY PURCHASED</strong>
+                    <span id="mc-robo-notice-detail"></span>
+                </div>
+            </div>
+
+            <div class="mc-shop-tabs-row">
+                <div class="mc-shop-tabs" role="tablist" aria-label="Shop category">
+                    <button type="button" class="mc-shop-tab" id="mc-shop-tab-upgrades"
+                            role="tab" aria-controls="mc-shop-panel-upgrades" aria-selected="true" tabindex="0">
+                        Upgrades <span class="mc-shop-tab-count">7</span>
+                    </button>
+                    <button type="button" class="mc-shop-tab" id="mc-shop-tab-buildings"
+                            role="tab" aria-controls="mc-shop-panel-buildings" aria-selected="false" tabindex="-1">
+                        Buildings <span class="mc-shop-tab-count">7</span>
+                    </button>
+                </div>
+
+                <div class="mc-shop-info">
+                    <button type="button" id="mc-shop-info-trigger" class="mc-shop-info-trigger"
+                            aria-label="About Upgrades" aria-describedby="mc-shop-tooltip">i</button>
+                    <div id="mc-shop-tooltip" class="mc-shop-tooltip" role="tooltip">
+                        Upgrades increase how much money you earn each time you click the bill.
+                    </div>
+                </div>
+            </div>
+
+            <section id="mc-shop-panel-upgrades" class="mc-shop-panel" role="tabpanel"
+                     aria-labelledby="mc-shop-tab-upgrades">
+                ${this.#renderItems("upgrade")}
+            </section>
+            <section id="mc-shop-panel-buildings" class="mc-shop-panel" role="tabpanel"
+                     aria-labelledby="mc-shop-tab-buildings" hidden>
+                ${this.#renderItems("building")}
+            </section>
+        `;
+
+        // Avoid duplicate stores if the view is ever recreated
+        layout.querySelector("#upgrade-store")?.remove();
+        layout.appendChild(this.#store);
+
+        // The two tabs filter the shop without rebuilding the purchase buttons
+        for (const category of ["upgrades", "buildings"] as const) {
+            const tab = this.#store.querySelector<HTMLButtonElement>(`#mc-shop-tab-${category}`);
+            tab?.addEventListener("click", () => this.#selectCategory(category));
+
+            // Arrow keys also switch categories when using the keyboard
+            tab?.addEventListener("keydown", (event) => {
+                if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+                    event.preventDefault();
+                    const next = category === "upgrades" ? "buildings" : "upgrades";
+                    this.#selectCategory(next);
+                    this.#store.querySelector<HTMLButtonElement>(`#mc-shop-tab-${next}`)?.focus();
+                }
+            });
+        }
+
+        // Connect every Buy button to the existing controller methods
+        for (const item of this.#items) {
+            const button = this.#store.querySelector<HTMLButtonElement>(`#purchase-${item.id}`);
+
+            button?.addEventListener("click", () => {
+                this.#hideError();
+
+                if (item.category === "upgrade") {
+                    void this.#controller.purchaseUpgrade(item.type);
+                } else {
+                    void this.#controller.purchaseBuilding(item.type);
+                }
+            });
+        }
+
         this.#player.registerListener(this);
-
-        this.#dialog =
-            document.createElement("dialog");
-
-        this.#dialog.id = "upgrade-store";
-
-        // this.#dialog.innerHTML = `
-        //     <h2>Upgrade Store</h2>
-        //
-        //     <div id="upgrade-error" hidden></div>
-        //
-        //     <button id="purchase-advisor">
-        //         Buy Financial Advisor
-        //     </button>
-        //     <span>Level: <span id="advisor-level">0</span></span>
-        //     <span>Price: <span id="advisor-price">20</span></span>
-        //
-        //     <br><br>
-        //
-        //     <button id="purchase-employer">
-        //         Buy Employer
-        //     </button>
-        //      <span>Level: <span id="employer-level">0</span></span>
-        //     <span>Price: <span id="employer-price">100</span></span>
-        //
-        //     <br><br>
-        //
-        //     <button id="purchase-mint">
-        //         Buy Royal Mint
-        //     </button>
-        //      <span>Level: <span id="mint-level"></span></span>
-        //     <span>Price: <span id="mint-price"></span></span>
-        //
-        //     <br><br>
-        //
-        //     <button id="purchase-banker">
-        //         Buy Banker
-        //     </button>
-        //      <span>Level: <span id="banker-level"></span></span>
-        //     <span>Price: <span id="banker-price"></span></span>
-        //
-        //     <br><br>
-        //
-        //     <button id="close-store">
-        //         Exit
-        //     </button>
-        // `;
-
-        this.#dialog.innerHTML = `
-    <h2>Upgrade Store</h2>
-
-    <div id="upgrade-error" hidden></div>
-
-    <h3>Upgrades</h3>
-
-    <button id="purchase-advisor">
-        Buy Financial Advisor
-    </button>
-    <span>Level: <span id="advisor-level">0</span></span>
-    <span>Price: <span id="advisor-price">50</span></span>
-
-    <br><br>
-
-    <button id="purchase-employer">
-        Buy Employer
-    </button>
-    <span>Level: <span id="employer-level">0</span></span>
-    <span>Price: <span id="employer-price">100</span></span>
-
-    <br><br>
-
-    <button id="purchase-freelance">
-        Buy Freelance Contract
-    </button>
-    <span>Level: <span id="freelance-level">0</span></span>
-    <span>Price: <span id="freelance-price">250</span></span>
-
-    <br><br>
-
-    <button id="purchase-side-business">
-        Buy Side Business
-    </button>
-    <span>Level: <span id="side-business-level">0</span></span>
-    <span>Price: <span id="side-business-price">500</span></span>
-
-    <br><br>
-
-    <button id="purchase-investment-portfolio">
-        Buy Investment Portfolio
-    </button>
-    <span>Level: <span id="investment-portfolio-level">0</span></span>
-    <span>Price: <span id="investment-portfolio-price">1500</span></span>
-
-    <br><br>
-
-    <button id="purchase-property-empire">
-        Buy Property Empire
-    </button>
-    <span>Level: <span id="property-empire-level">0</span></span>
-    <span>Price: <span id="property-empire-price">5000</span></span>
-
-    <br><br>
-
-    <button id="purchase-tech-startup">
-        Buy Tech Startup
-    </button>
-    <span>Level: <span id="tech-startup-level">0</span></span>
-    <span>Price: <span id="tech-startup-price">15000</span></span>
-
-    <br><br>
-
-    <h3>Buildings</h3>
-
-    <button id="purchase-mint">
-        Buy Royal Mint
-    </button>
-    <span>Level: <span id="mint-level">0</span></span>
-    <span>Price: <span id="mint-price">500</span></span>
-
-    <br><br>
-
-    <button id="purchase-banker">
-        Buy Banker
-    </button>
-    <span>Level: <span id="banker-level">0</span></span>
-    <span>Price: <span id="banker-price">1000</span></span>
-
-    <br><br>
-
-    <button id="purchase-atm">
-        Buy ATM Network
-    </button>
-    <span>Level: <span id="atm-level">0</span></span>
-    <span>Price: <span id="atm-price">2500</span></span>
-
-    <br><br>
-
-    <button id="purchase-investment-firm">
-        Buy Investment Firm
-    </button>
-    <span>Level: <span id="investment-firm-level">0</span></span>
-    <span>Price: <span id="investment-firm-price">7500</span></span>
-
-    <br><br>
-
-    <button id="purchase-tech-company">
-        Buy Tech Company
-    </button>
-    <span>Level: <span id="tech-company-level">0</span></span>
-    <span>Price: <span id="tech-company-price">20000</span></span>
-
-    <br><br>
-
-    <button id="purchase-bank-headquarters">
-        Buy Bank Headquarters
-    </button>
-    <span>Level: <span id="bank-headquarters-level">0</span></span>
-    <span>Price: <span id="bank-headquarters-price">50000</span></span>
-
-    <br><br>
-
-    <button id="purchase-global-corporation">
-        Buy Global Corporation
-    </button>
-    <span>Level: <span id="global-corporation-level">0</span></span>
-    <span>Price: <span id="global-corporation-price">100000</span></span>
-
-    <br><br>
-
-    <button id="close-store">
-        Exit
-    </button>
-`;
-
-        document.body.appendChild(this.#dialog);
-
-        // Close button
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#close-store")!
-            .addEventListener("click", () => {
-                this.#dialog.close();
-            });
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-advisor")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseUpgrade(UpgradeType.FinancialAdvisor);
-            });
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-employer")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseUpgrade(UpgradeType.Employer);
-            });
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-banker")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseBuilding(UpgradeType.Banker);
-            });
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-mint")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseBuilding(UpgradeType.RoyalMint);
-            });
-
-        // 10 New Buildings and Upgrades
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-freelance")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseUpgrade(UpgradeType.FreelanceContract);
-            });
-
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-side-business")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseUpgrade(UpgradeType.SideBusiness);
-            });
-
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-investment-portfolio")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseUpgrade(UpgradeType.InvestmentPortfolio);
-            });
-
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-property-empire")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseUpgrade(UpgradeType.PropertyEmpire);
-            });
-
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-tech-startup")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseUpgrade(UpgradeType.TechStartup);
-            });
-
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-atm")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseBuilding(UpgradeType.ATMNetwork);
-            });
-
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-investment-firm")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseBuilding(UpgradeType.InvestmentFirm);
-            });
-
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-tech-company")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseBuilding(UpgradeType.TechCompany);
-            });
-
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-bank-headquarters")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseBuilding(UpgradeType.BankHeadquarters);
-            });
-
-        this.#dialog
-            .querySelector<HTMLButtonElement>("#purchase-global-corporation")!
-            .addEventListener("click", () => {
-                this.#controller.purchaseBuilding(UpgradeType.GlobalCorporation);
-            });
+        this.notify();
     }
 
-    /**
-     * Shows the upgrade store
-     * Side effects: updates the upgrade information and opens the dialog
-     */
+    // Creates a shop card with an icon, name, level, price and purchase button
+    #renderItems(category: "upgrade" | "building"): string {
+        return this.#items
+            .filter(item => item.category === category)
+            .map(item => `
+                <div class="mc-shop-item" data-upgrade="${item.id}">
+                    <h4 class="mc-shop-item-name">${item.name}</h4>
+                    <span>Level <span id="${item.id}-level">0</span></span>
+                    <span>Price: $<span id="${item.id}-price">0</span></span>
+                    <div class="mc-shop-impact">
+                        <span class="mc-shop-impact-value" id="${item.id}-impact" aria-live="off">Calculating…</span>
+                    </div>
+                    <button type="button" id="purchase-${item.id}"
+                            aria-label="Buy ${item.name}">Buy</button>
+                </div>
+            `)
+            .join("");
+    }
+
+    // Displays one category while keeping the other category's prices and levels in memory
+    #selectCategory(category: "upgrades" | "buildings"): void {
+        for (const name of ["upgrades", "buildings"] as const) {
+            const active = name === category;
+            const tab = this.#store.querySelector<HTMLButtonElement>(`#mc-shop-tab-${name}`);
+            const panel = this.#store.querySelector<HTMLElement>(`#mc-shop-panel-${name}`);
+
+            if (tab !== null) {
+                tab.setAttribute("aria-selected", String(active));
+                tab.tabIndex = active ? 0 : -1;
+            }
+
+            if (panel !== null) panel.hidden = !active;
+        }
+
+        // Explain the selected category only when the user hovers or focuses the info icon
+        const tooltip = this.#store.querySelector<HTMLElement>("#mc-shop-tooltip");
+        const infoButton = this.#store.querySelector<HTMLButtonElement>("#mc-shop-info-trigger");
+
+        if (tooltip !== null) {
+            tooltip.textContent = category === "upgrades"
+                ? "Upgrades increase how much money you earn each time you click the bill."
+                : "Buildings are auto-clickers that earn money for you automatically over time.";
+        }
+
+        infoButton?.setAttribute("aria-label", `About ${category === "upgrades" ? "Upgrades" : "Buildings"}`);
+        this.#hideError();
+    }
+
+    /** Shows the shop beside the money bill without blocking clicks */
     show(): void {
         this.notify();
-        this.#dialog.showModal();
+
+        this.#store.hidden = false;
+        document.querySelector("#purchase-upgrades")?.setAttribute("hidden", "");
     }
 
-    /**
-     * Updates the view when the player model changes
-     * Side effects: updates the displayed upgrade levels and prices
-     */
+    /** Refreshes prices, levels and the next click bonus when Player changes */
     notify(): void {
-        this.#updateLevel();
-        this.#updatePrice()
-    }
+        for (const item of this.#items) {
+            const level = this.#player.findUpgradeLevel(item.type);
+            const levelLabel = this.#store.querySelector<HTMLElement>(`#${item.id}-level`);
+            const priceLabel = this.#store.querySelector<HTMLElement>(`#${item.id}-price`);
+            const impact = this.#store.querySelector<HTMLElement>(`#${item.id}-impact`);
 
-    /**
-     * Updates the displayed levels using the current upgrade levels from the player model
-     * Side effects: changes the advisor and employer levels shown in the view
-     */
-    #updateLevel(): void {
-        this.#dialog.querySelector<HTMLSpanElement>("#advisor-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.FinancialAdvisor).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#employer-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.Employer).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#banker-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.Banker).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#mint-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.RoyalMint).toString();
+            if (levelLabel !== null) levelLabel.textContent = level.toString();
+            if (priceLabel !== null) {
+                priceLabel.textContent = this.#player.findPrice(item.type).toLocaleString("en-CA");
+            }
 
-        this.#dialog.querySelector<HTMLSpanElement>("#freelance-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.FreelanceContract).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#side-business-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.SideBusiness).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#investment-portfolio-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.InvestmentPortfolio).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#property-empire-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.PropertyEmpire).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#tech-startup-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.TechStartup).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#atm-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.ATMNetwork).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#investment-firm-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.InvestmentFirm).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#tech-company-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.TechCompany).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#bank-headquarters-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.BankHeadquarters).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#global-corporation-level")!
-            .textContent = this.#player.findUpgradeLevel(UpgradeType.GlobalCorporation).toString();
+            // The NEXT purchase bonus uses the exact calculation in Player.ts
+            if (impact !== null) {
+                const updatedText = this.#getPurchaseImpact(item);
+                if (impact.textContent !== updatedText) impact.textContent = updatedText;
+                if (item.category === "upgrade") {
+                    impact.title = "Bonus you will get when you buy the next level";
+                }
 
-    }
+                // A brief highlight shows when a manual or RoboBuy purchase levels up
+                const previousLevel = this.#previousLevels.get(item.type);
+                if (previousLevel !== undefined && level > previousLevel) {
+                    impact.classList.remove("mc-shop-impact-updated");
+                    void impact.offsetWidth;
+                    impact.classList.add("mc-shop-impact-updated");
+                    window.setTimeout(() => impact.classList.remove("mc-shop-impact-updated"), 700);
+                }
+            }
+            this.#previousLevels.set(item.type, level);
+        }
 
-    /**
-     * Updates the displayed prices using the current upgrade prices from the player model
-     * Side effects: changes the advisor and employer prices shown in the view
-     */
-    #updatePrice(): void {
-        this.#dialog.querySelector<HTMLSpanElement>("#advisor-price")!
-            .textContent = this.#player.findPrice(UpgradeType.FinancialAdvisor).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#employer-price")!
-            .textContent = this.#player.findPrice(UpgradeType.Employer).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#banker-price")!
-            .textContent = this.#player.findPrice(UpgradeType.Banker).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#mint-price")!
-            .textContent = this.#player.findPrice(UpgradeType.RoyalMint).toString();
-
-        this.#dialog.querySelector<HTMLSpanElement>("#freelance-price")!
-            .textContent = this.#player.findPrice(UpgradeType.FreelanceContract).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#side-business-price")!
-            .textContent = this.#player.findPrice(UpgradeType.SideBusiness).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#investment-portfolio-price")!
-            .textContent = this.#player.findPrice(UpgradeType.InvestmentPortfolio).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#property-empire-price")!
-            .textContent = this.#player.findPrice(UpgradeType.PropertyEmpire).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#tech-startup-price")!
-            .textContent = this.#player.findPrice(UpgradeType.TechStartup).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#atm-price")!
-            .textContent = this.#player.findPrice(UpgradeType.ATMNetwork).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#investment-firm-price")!
-            .textContent = this.#player.findPrice(UpgradeType.InvestmentFirm).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#tech-company-price")!
-            .textContent = this.#player.findPrice(UpgradeType.TechCompany).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#bank-headquarters-price")!
-            .textContent = this.#player.findPrice(UpgradeType.BankHeadquarters).toString();
-        this.#dialog.querySelector<HTMLSpanElement>("#global-corporation-price")!
-            .textContent = this.#player.findPrice(UpgradeType.GlobalCorporation).toString();
-    }
-
-    displayPlayerMustBeLoggedIn() {
-        const errorElement =
-            document.querySelector<HTMLDivElement>("#upgrade-error");
-
-        if (errorElement !== null) {
-            errorElement.textContent = "Player must be logged in first.";
-            errorElement.hidden = false;
+        // Keep both printed banknote corner values synchronized with click power
+        const bill = document.querySelector<HTMLButtonElement>("#click-button");
+        if (bill !== null) {
+            const clickPower = this.#player.currClick;
+            bill.dataset.perClick = new Intl.NumberFormat("en-CA", {
+                notation: "compact", maximumFractionDigits: 1
+            }).format(clickPower);
+            bill.setAttribute("aria-label", `Click to earn ${clickPower.toLocaleString("en-CA")} money`);
         }
     }
 
-    /**
-     * Shows an error when the player cannot afford a purchase
-     */
-    public showInsufficientBuyPowerError(): void {
-        alert("You do not have enough money for this purchase");
+    /** Shows what the NEXT purchase contributes, using Player model values */
+    #getPurchaseImpact(item: ShopItem): string {
+        const money = (amount: number): string =>
+            `$${amount.toLocaleString("en-CA", { maximumFractionDigits: 2 })}`;
+
+        if (item.category === "upgrade") {
+            const upgrade = this.#player.upgrades.find(u => u.upgradeName === item.type);
+            if (upgrade === undefined) return "Click boost unavailable";
+            // Ask Player for the actual bonus from the next purchase
+            return `+${money(this.#player.getNextClickBonus(item.type))} per click`;
+        }
+
+        const building = this.#player.buildings.find(b => b.upgradeName === item.type);
+        if (building === undefined) return "Auto income unavailable";
+
+        // intervalSpeed goes directly into setInterval, so it is in milliseconds
+        const model = building as unknown as {
+            productionValue: number;
+            intervalSpeed?: number;
+            calculateProduction?: (level: number) => number;
+        };
+        const nextLevel = this.#player.findUpgradeLevel(item.type) + 1;
+        const hasCalculation = typeof model.calculateProduction === "function";
+        const earnings = hasCalculation
+            ? model.calculateProduction!(nextLevel)
+            : model.productionValue;
+        const interval = Number(model.intervalSpeed);
+        const cadence = Number.isFinite(interval) && interval > 0
+            ? ` every ${Number((interval / 1000).toFixed(2))}s`
+            : " per auto payout";
+
+        // Mark base production explicitly when the model does not expose a calculator
+        return hasCalculation
+            ? `Next level: ${money(earnings)}${cadence}`
+            : `Base: ${money(earnings)}${cadence}`;
     }
 
+    /** Queues the name of each item RoboBuy actually purchased */
+    showRoboBuyPurchase(type: UpgradeType, count: number): void {
+        if (count <= 0) return;
+        this.#roboNotices.push({ type, count });
+        // Bound the queue in case RoboBuy is purchasing very quickly
+        if (this.#roboNotices.length > 8) this.#roboNotices.shift();
+        if (this.#roboNoticeTimer === undefined) this.#showNextRoboNotice();
+    }
+
+    #showNextRoboNotice(): void {
+        const next = this.#roboNotices.shift();
+        const notice = this.#store.querySelector<HTMLElement>("#mc-robo-notice");
+        const detail = this.#store.querySelector<HTMLElement>("#mc-robo-notice-detail");
+
+        if (next === undefined) {
+            if (notice !== null) notice.hidden = true;
+            this.#roboNoticeTimer = undefined;
+            return;
+        }
+
+        const item = this.#items.find(i => i.type === next.type);
+        const name = item?.name ?? "Upgrade";
+        const level = this.#player.findUpgradeLevel(next.type);
+        if (detail !== null) {
+            detail.textContent = `${name}${next.count > 1 ? ` ×${next.count}` : ""} · Level ${level}`;
+        }
+        if (notice !== null) notice.hidden = false;
+
+        // Give the newly purchased card a subtle highlight when visible
+        if (item !== undefined) {
+            const card = this.#store.querySelector<HTMLElement>(`[data-upgrade="${item.id}"]`);
+            card?.classList.remove("mc-robo-bought");
+            if (card !== null && card !== undefined) {
+                void card.offsetWidth; // Restart the highlight on repeated purchases
+                card.classList.add("mc-robo-bought");
+                window.setTimeout(() => card.classList.remove("mc-robo-bought"), 1700);
+            }
+        }
+
+        this.#roboNoticeTimer = window.setTimeout(() => {
+            this.#roboNoticeTimer = undefined;
+            this.#showNextRoboNotice();
+        }, 2200);
+    }
+
+    #hideError(): void {
+        const error = this.#store.querySelector<HTMLDivElement>("#upgrade-error");
+
+        if (error !== null) {
+            error.hidden = true;
+            error.textContent = "";
+        }
+    }
+
+    #showError(message: string): void {
+        const error = this.#store.querySelector<HTMLDivElement>("#upgrade-error");
+
+        if (error !== null) {
+            error.textContent = message;
+            error.hidden = false;
+        }
+    }
+
+    displayPlayerMustBeLoggedIn(): void {
+        this.#showError("Please log in before buying upgrades.");
+    }
+
+    showInsufficientBuyPowerError(): void {
+        this.#showError("Not enough money yet. Keep clicking to afford this item.");
+    }
 }

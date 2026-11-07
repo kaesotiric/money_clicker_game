@@ -1,0 +1,785 @@
+/* MONEY CLICKER — refined UI, version 3
+   Drop-in replacement for your previous CSS file.
+   Existing game IDs and TypeScript click handlers remain unchanged.
+*/
+
+:root {
+    color-scheme: light;
+    font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+
+    --ink: #181c19;
+    --ink-soft: #343a35;
+    --muted: #777e76;
+    --canvas: #f6f7f4;
+    --surface: #ffffff;
+    --line: #e5e9e3;
+    --mint: #dcefe1;
+    --mint-dark: #587a60;
+    --danger: #a43a36;
+    --radius: 18px;
+
+    /* Banknote is an embedded SVG, so no extra image download is needed. */
+    --money-note-art: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20720%20360%22%20role%3D%22img%22%20aria-label%3D%22Illustrated%20Money%20Clicker%20banknote%20with%20dynamic%20click%20power%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22paper%22%20x1%3D%220%22%20x2%3D%221%22%20y1%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c3dcc6%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23a3c4af%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d5e6cb%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22medal%22%20x1%3D%220%22%20x2%3D%221%22%20y1%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f8f7df%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23cce1c9%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3Cpattern%20id%3D%22lines%22%20width%3D%2212%22%20height%3D%2212%22%20patternUnits%3D%22userSpaceOnUse%22%20patternTransform%3D%22rotate%2826%29%22%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M0%200V12%22%20stroke%3D%22%2347765e%22%20stroke-width%3D%221%22%20opacity%3D%22.23%22%2F%3E%0A%20%20%20%20%3C%2Fpattern%3E%0A%20%20%20%20%3Cpattern%20id%3D%22diamonds%22%20width%3D%2228%22%20height%3D%2228%22%20patternUnits%3D%22userSpaceOnUse%22%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M14%200%2028%2014%2014%2028%200%2014Z%22%20fill%3D%22none%22%20stroke%3D%22%234b7a65%22%20stroke-width%3D%221%22%20opacity%3D%22.2%22%2F%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%2214%22%20cy%3D%2214%22%20r%3D%222.1%22%20fill%3D%22%23517967%22%20opacity%3D%22.3%22%2F%3E%0A%20%20%20%20%3C%2Fpattern%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%22714%22%20height%3D%22354%22%20rx%3D%2220%22%20fill%3D%22url%28%23paper%29%22%20stroke%3D%22%23456a55%22%20stroke-width%3D%226%22%2F%3E%0A%20%20%3Crect%20x%3D%2210%22%20y%3D%2210%22%20width%3D%22700%22%20height%3D%22340%22%20rx%3D%2215%22%20fill%3D%22url%28%23diamonds%29%22%2F%3E%0A%20%20%3Crect%20x%3D%2220%22%20y%3D%2220%22%20width%3D%22680%22%20height%3D%22320%22%20rx%3D%2211%22%20fill%3D%22none%22%20stroke%3D%22%23547d63%22%20stroke-width%3D%223%22%2F%3E%0A%20%20%3Crect%20x%3D%2229%22%20y%3D%2229%22%20width%3D%22662%22%20height%3D%22302%22%20rx%3D%228%22%20fill%3D%22none%22%20stroke%3D%22%23f6f5e3%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%3Crect%20x%3D%2239%22%20y%3D%2240%22%20width%3D%22642%22%20height%3D%22280%22%20rx%3D%224%22%20fill%3D%22url%28%23lines%29%22%20opacity%3D%22.48%22%2F%3E%0A%20%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%235f8c72%22%20opacity%3D%22.37%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M105%2058C55%2072%2055%20126%20105%20140c42-10%2044-52%200-82Zm510%200c50%2014%2050%2068%200%2082-42-10-44-52%200-82ZM105%20302c-50-14-50-68%200-82%2042%2010%2044%2052%200%2082Zm510%200c50-14%2050-68%200-82-42%2010-44%2052%200%2082Z%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M72%20180q72-70%20146%200-74%2070-146%200Zm430%200q74-70%20146%200-72%2070-146%200Z%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Ccircle%20cx%3D%22360%22%20cy%3D%22180%22%20r%3D%22132%22%20fill%3D%22%239ebca5%22%20opacity%3D%22.8%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%22360%22%20cy%3D%22180%22%20r%3D%22120%22%20fill%3D%22url%28%23medal%29%22%20stroke%3D%22%234a755f%22%20stroke-width%3D%224%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%22360%22%20cy%3D%22180%22%20r%3D%22110%22%20fill%3D%22none%22%20stroke%3D%22%2384a98c%22%20stroke-width%3D%222%22%20stroke-dasharray%3D%223%206%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%22360%22%20cy%3D%22180%22%20r%3D%2293%22%20fill%3D%22none%22%20stroke%3D%22%235e826b%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M304%20180Q360%20115%20416%20180Q360%20245%20304%20180Z%22%20fill%3D%22none%22%20stroke%3D%22%23799b82%22%20stroke-width%3D%222%22%20opacity%3D%22.56%22%2F%3E%0A%20%20%3Ctext%20x%3D%22360%22%20y%3D%22234%22%20text-anchor%3D%22middle%22%20fill%3D%22%23244d3b%22%20font-family%3D%22Georgia%2C%27Times%20New%20Roman%27%2Cserif%22%20font-size%3D%22170%22%20font-weight%3D%22bold%22%3E%24%3C%2Ftext%3E%0A%20%20%3Cg%20fill%3D%22%23254c3b%22%20font-family%3D%22Georgia%2C%27Times%20New%20Roman%27%2Cserif%22%20font-weight%3D%22bold%22%3E%0A%20%20%20%20%3Ctext%20x%3D%2258%22%20y%3D%22287%22%20font-size%3D%2224%22%3EMC%3C%2Ftext%3E%0A%20%20%20%20%3Ctext%20x%3D%22663%22%20y%3D%2293%22%20font-size%3D%2224%22%20text-anchor%3D%22end%22%3EMC%3C%2Ftext%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20fill%3D%22%23315a47%22%20font-family%3D%22Arial%2CHelvetica%2Csans-serif%22%20font-size%3D%2213%22%20letter-spacing%3D%223%22%20font-weight%3D%22bold%22%3E%0A%20%20%20%20%3Ctext%20x%3D%22360%22%20y%3D%2246%22%20text-anchor%3D%22middle%22%3EMONEY%20CLICKER%3C%2Ftext%3E%0A%20%20%20%20%3Ctext%20x%3D%22360%22%20y%3D%22326%22%20text-anchor%3D%22middle%22%3ECLICK%20TO%20EARN%3C%2Ftext%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20fill%3D%22%23386650%22%20font-family%3D%22%27Courier%20New%27%2Cmonospace%22%20font-size%3D%2212%22%20letter-spacing%3D%221.7%22%3E%0A%20%20%20%20%3Ctext%20x%3D%2262%22%20y%3D%22187%22%3EMC%20031024%3C%2Ftext%3E%0A%20%20%20%20%3Ctext%20x%3D%22546%22%20y%3D%22187%22%3EMC%20031024%3C%2Ftext%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%233e674f%22%20stroke-width%3D%222%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M58%20212h138M524%20212h138M58%20149h138M524%20149h138%22%20opacity%3D%22.35%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2297%22%20cy%3D%22181%22%20r%3D%2231%22%20opacity%3D%22.15%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22623%22%20cy%3D%22181%22%20r%3D%2231%22%20opacity%3D%22.15%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%22714%22%20height%3D%22354%22%20rx%3D%2220%22%20fill%3D%22none%22%20stroke%3D%22%23284b39%22%20stroke-width%3D%224%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { min-height: 100%; }
+body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 1px 0 56px;
+    background: radial-gradient(circle at 50% -180px, #e8f0e9 0, #f6f7f4 430px, #f6f7f4 100%);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.5;
+}
+h1, h2, h3, p { margin-top: 0; }
+h1, h2, h3 { color: var(--ink); }
+button, input { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+
+/* Main game surface */
+#app {
+    position: relative;
+    width: min(890px, calc(100% - 32px));
+    max-width: none;
+    min-height: 0;
+    margin: 62px auto 0;
+    padding: clamp(26px, 4.5vw, 50px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 24px;
+    text-align: center;
+    border: 1px solid var(--line);
+    border-radius: 25px;
+    background: var(--surface);
+    box-shadow: 0 18px 55px rgba(20, 35, 23, .055), 0 2px 9px rgba(20, 35, 23, .025);
+}
+
+#app::before {
+    content: "MONEY CLICKER  /  THE GAME";
+    display: block;
+    align-self: flex-start;
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: .16em;
+    color: var(--muted);
+}
+
+#app h1 {
+    margin: 0;
+    font-size: clamp(30px, 5vw, 44px);
+    font-weight: 760;
+    letter-spacing: -.055em;
+    line-height: 1.08;
+    color: var(--ink);
+}
+
+#app hr {
+    width: 100%;
+    margin: 0;
+    border: 0;
+    border-top: 1px solid var(--line);
+}
+
+/* Main balance display — the first direct div in your existing #app. */
+#app > div:first-of-type {
+    width: 100%;
+    padding: 26px 22px;
+    background: #f1f6f0;
+    border: 1px solid #e2ece1;
+    border-radius: 19px;
+    color: var(--ink-soft);
+    font-size: clamp(18px, 2.5vw, 23px);
+    font-weight: 550;
+    line-height: 1.4;
+}
+
+#buy-power {
+    color: #1e472d;
+    font-size: clamp(27px, 4vw, 38px);
+    font-weight: 780;
+    letter-spacing: -.045em;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Banknote and game controls */
+#clicker {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 25px;
+    padding: 12px 0 8px;
+}
+
+button {
+    border: 1px solid transparent;
+    border-radius: 12px;
+    padding: 12px 20px;
+    background: #191e1a;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.3;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background-color .16s ease, border-color .16s ease,
+    transform .16s ease, box-shadow .16s ease;
+}
+button:hover {
+    background-color: #050806;
+    border-color: #050806;
+    transform: translateY(-2px);
+    box-shadow: 0 7px 18px rgba(18, 24, 20, .15);
+}
+button:active { transform: translateY(0); }
+button:focus-visible { outline: 3px solid #80ab8b; outline-offset: 3px; }
+button:disabled {
+    background-color: #e8ece8;
+    border-color: #e0e5df;
+    color: #868d85;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* The banknote IS the existing button — no JavaScript changes needed. */
+#click-button {
+    flex: 0 0 auto;
+    display: block;
+    width: min(370px, 94%);
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background-color: #accbb6;
+    background-image: var(--money-note-art);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    color: transparent;
+    font-size: 0;
+    overflow: hidden;
+    cursor: pointer;
+    transform: rotate(-2deg);
+    filter: none;
+    box-shadow: 0 8px 0 #759482, 0 18px 28px rgba(18, 43, 28, .17);
+    transition: transform .16s ease, box-shadow .16s ease;
+}
+
+/* The SVG contains no printed amount. The two labels display a single live value
+   from button[data-per-click], updated by money-clicker-bill.ts. */
+#click-button {
+    position: relative;
+    isolation: isolate;
+}
+
+#click-button::before,
+#click-button::after {
+    content: attr(data-per-click);
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+    display: block;
+    color: #254c3b;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(20px, 3.15vw, 29px);
+    font-weight: 750;
+    line-height: 1;
+    letter-spacing: -.03em;
+    font-variant-numeric: lining-nums tabular-nums;
+    white-space: nowrap;
+    max-width: 31%;
+    overflow: hidden;
+    text-overflow: clip;
+    text-shadow: 0 .35px 0 rgba(255, 255, 255, .3);
+}
+
+/* Upper-left number */
+#click-button::before { left: 7.8%; top: 14.2%; }
+
+/* Lower-right number */
+#click-button::after { right: 7.8%; bottom: 15.1%; text-align: right; }
+
+/* Same exact note on hover/press — don't replace its background with button colors. */
+#click-button:hover,
+#click-button:focus-visible {
+    background-image: var(--money-note-art) !important;
+    background-color: #accbb6 !important;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    border: 0;
+    filter: none !important;
+    transform: rotate(-1deg) translateY(-5px);
+    box-shadow: 0 11px 0 #759482, 0 25px 34px rgba(18, 43, 28, .19);
+}
+#click-button:active {
+    background-image: var(--money-note-art) !important;
+    background-color: #accbb6 !important;
+    background-size: 100% 100%;
+    border: 0;
+    filter: none !important;
+    transform: rotate(0deg) translateY(4px) scale(.99);
+    box-shadow: 0 3px 0 #759482, 0 8px 13px rgba(18, 43, 28, .14);
+}
+#click-button:focus-visible { outline: 3px solid var(--ink); outline-offset: 7px; }
+
+#purchase-upgrades {
+    min-width: 192px;
+    padding: 14px 24px;
+    background: #191e1a;
+    color: #fff;
+    border-color: #191e1a;
+    border-radius: 12px;
+    box-shadow: none;
+}
+#purchase-upgrades:hover { background: #050806; border-color: #050806; }
+
+/* Other game purchase buttons, using the existing IDs */
+#purchase-mint, #purchase-banker, #purchase-atm,
+#purchase-investment-firm, #purchase-tech-company,
+#purchase-bank-headquarters, #purchase-global-corporation {
+    margin: 5px 6px 5px 0;
+    background: #191e1a;
+    color: #fff;
+    border-color: #191e1a;
+}
+#purchase-mint:hover, #purchase-banker:hover, #purchase-atm:hover,
+#purchase-investment-firm:hover, #purchase-tech-company:hover,
+#purchase-bank-headquarters:hover, #purchase-global-corporation:hover {
+    background: #050806;
+    border-color: #050806;
+}
+
+/* Upgrade store — dialog uses the existing markup and purchase button IDs. */
+#upgrade-store {
+    width: min(720px, calc(100% - 28px));
+    max-width: none;
+    max-height: min(790px, calc(100dvh - 40px));
+    padding: clamp(20px, 4vw, 34px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #e4e9e3;
+    border-radius: 23px;
+    background: #f8faf7;
+    color: var(--ink);
+    box-shadow: 0 30px 90px rgba(13, 19, 14, .22);
+}
+#upgrade-store::backdrop {
+    background: rgba(14, 19, 16, .62);
+    backdrop-filter: blur(4px);
+}
+#upgrade-store h2 {
+    margin: 3px 0 7px;
+    font-size: clamp(27px, 4vw, 33px);
+    font-weight: 760;
+    line-height: 1.12;
+    letter-spacing: -.045em;
+    color: var(--ink);
+}
+#upgrade-store h2::before {
+    content: "THE SHOP";
+    display: block;
+    margin-bottom: 9px;
+    font-size: 10px;
+    letter-spacing: .16em;
+    color: #6f8b76;
+    font-weight: 750;
+}
+#upgrade-store p { color: #646f65; }
+#upgrade-store h3 { font-size: 16px; letter-spacing: -.015em; }
+#upgrade-store hr { border: 0; border-top: 1px solid var(--line); margin: 22px 0; }
+
+/* Turns existing row wrappers into easy-to-scan product cards. */
+#upgrade-store :is(div, li, article, section):has(> button[id^="purchase-"]) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 20px;
+    padding: 16px 18px;
+    margin: 10px 0;
+    border: 1px solid #e3e9e1;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 2px 3px rgba(16, 33, 21, .025);
+}
+#upgrade-store :is(div, li, article, section):has(> button[id^="purchase-"]):hover {
+    border-color: #cbdccf;
+    box-shadow: 0 8px 22px rgba(26, 44, 30, .055);
+}
+#upgrade-store :is(div, li, article, section):has(> button[id^="purchase-"]) > span,
+#upgrade-store :is(div, li, article, section):has(> button[id^="purchase-"]) > p {
+    color: #687268;
+    font-size: 13px;
+    line-height: 1.45;
+}
+#upgrade-store button[id^="purchase-"] {
+    min-height: 40px;
+    padding: 10px 16px;
+    margin: 4px 0;
+    border-radius: 10px;
+    background: #191e1a;
+    border-color: #191e1a;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 660;
+}
+#upgrade-store button[id^="purchase-"]:hover {
+    background: #050806;
+    border-color: #050806;
+}
+/* Fallback for stores where purchase buttons aren't wrapped in rows. */
+#upgrade-store > button[id^="purchase-"] {
+    margin: 9px 8px 9px 0;
+}
+#upgrade-store span { font-variant-numeric: tabular-nums; }
+#close-store {
+    display: block;
+    width: 100%;
+    margin: 22px 0 0;
+    padding: 13px 18px;
+    border: 1px solid #dfe6dc;
+    border-radius: 12px;
+    background: #fff;
+    color: #293129;
+    font-weight: 650;
+    box-shadow: none;
+}
+#close-store:hover {
+    background: #edf2ec;
+    border-color: #cedbcd;
+    color: #1f2c21;
+    box-shadow: none;
+}
+
+/* Login / create account modal */
+#make-account {
+    width: 460px;
+    max-width: calc(100% - 28px);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #e6ebe3;
+    border-radius: 21px;
+    background: #f9faf7;
+    color: var(--ink);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .36);
+}
+#make-account::backdrop {
+    background: rgba(11, 14, 12, .75);
+    backdrop-filter: blur(5px);
+}
+#make-account[open] { animation: mc-dialog-in .18s ease-out; }
+@keyframes mc-dialog-in {
+    from { opacity: 0; transform: translateY(12px) scale(.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.account-header {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    padding: 29px 30px 24px;
+    background: #f2f6f1;
+    border-bottom: 1px solid #e1e9df;
+}
+.account-logo {
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 15px;
+    background: #191e1a;
+    color: #fff;
+    font-size: 28px;
+    font-weight: 780;
+}
+.account-header h2 {
+    margin: 0 0 6px;
+    color: var(--ink);
+    font-size: 24px;
+    font-weight: 740;
+    letter-spacing: -.035em;
+}
+.account-header p { color: #68746a; font-size: 13px; line-height: 1.48; }
+.account-form { display: flex; flex-direction: column; gap: 18px; padding: 26px 30px 30px; }
+.account-field { display: flex; flex-direction: column; gap: 7px; text-align: left; }
+.account-field span { color: var(--ink); font-size: 13px; font-weight: 700; }
+.account-field input {
+    display: block;
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid #dce3d9;
+    border-radius: 11px;
+    outline: 0;
+    background: #fff;
+    color: var(--ink);
+    font-size: 14px;
+    transition: border-color .16s ease, box-shadow .16s ease;
+}
+.account-field input::placeholder { color: #8e968e; opacity: 1; }
+.account-field input:hover { border-color: #b9c8ba; }
+.account-field input:focus { border-color: #7ca488; box-shadow: 0 0 0 4px rgba(115, 163, 124, .13); }
+.account-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 3px; }
+#login-button, #create-button {
+    width: 100%;
+    min-height: 46px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 680;
+    border-radius: 11px;
+    background: #191e1a;
+    border-color: #191e1a;
+    color: #fff;
+}
+#login-button:hover, #create-button:hover { background: #050806; border-color: #050806; }
+
+/* Inline warning messages: login errors, affordability, validation, etc. */
+.account-error, .game-warning, .warning-message, .error-message {
+    margin: 4px 0;
+    padding: 12px 15px;
+    border: 1px solid #f0d9d5;
+    border-left: 4px solid #c16b62;
+    border-radius: 11px;
+    background: #fcf4f2;
+    color: #8e3b36;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: left;
+    box-shadow: none;
+}
+.account-error[hidden], .game-warning[hidden], .warning-message[hidden], .error-message[hidden] {
+    display: none !important;
+}
+
+/* Small accessible non-blocking notices (used by money-clicker-notices.ts). */
+.mc-notices {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    width: min(360px, calc(100vw - 32px));
+    pointer-events: none;
+}
+.mc-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    min-height: 68px;
+    padding: 15px;
+    background: #fff;
+    border: 1px solid #e4e9e1;
+    border-left: 4px solid #8fa993;
+    border-radius: 13px;
+    box-shadow: 0 14px 38px rgba(12, 21, 13, .14);
+    pointer-events: auto;
+    animation: mc-notice-in .18s ease-out;
+}
+.mc-notice[data-type="error"] { border-left-color: #bc625c; }
+.mc-notice[data-type="success"] { border-left-color: #65a377; }
+.mc-notice[data-type="info"] { border-left-color: #809eac; }
+.mc-notice__icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 27px;
+    width: 27px;
+    height: 27px;
+    border-radius: 9px;
+    background: #edf3ec;
+    color: #456e4c;
+    font-size: 15px;
+    font-weight: 800;
+}
+.mc-notice[data-type="error"] .mc-notice__icon { background: #fbefed; color: #ac514b; }
+.mc-notice[data-type="info"] .mc-notice__icon { background: #edf3f5; color: #55798b; }
+.mc-notice__body { flex: 1; min-width: 0; }
+.mc-notice__title { margin: 0 0 3px; color: var(--ink); font-size: 13px; font-weight: 750; }
+.mc-notice__message { margin: 0; color: #5d675e; font-size: 12px; overflow-wrap: anywhere; line-height: 1.45; }
+.mc-notice__close {
+    padding: 0;
+    margin: 0;
+    flex: 0 0 25px;
+    width: 25px;
+    height: 25px;
+    border: 0;
+    border-radius: 7px;
+    color: #7b857d;
+    background: transparent;
+    font-size: 19px;
+    font-weight: 500;
+    line-height: 1;
+    box-shadow: none;
+}
+.mc-notice__close:hover { background: #eff2ee; color: #252f28; transform: none; box-shadow: none; }
+@keyframes mc-notice-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Keep the empty main container invisible on the login screen. */
+body:has(#make-account[open]) { background: #141815; }
+body:has(#make-account[open]) #app {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+}
+body:has(#make-account[open]) #app:empty,
+body:has(#make-account[open]) #app:not(:has(#click-button)) {
+    visibility: hidden;
+}
+
+@media (max-width: 640px) {
+    body { padding-bottom: 24px; }
+    #app { margin: 18px auto 0; padding: 23px 18px; gap: 20px; border-radius: 19px; }
+    #app > div:first-of-type { padding: 20px 14px; }
+    #clicker { gap: 21px; padding-top: 5px; }
+    #click-button { width: min(330px, 92%); }
+    #purchase-upgrades { width: min(330px, 100%); }
+    #upgrade-store { padding: 22px 17px; border-radius: 17px; }
+    #upgrade-store :is(div, li, article, section):has(> button[id^="purchase-"]) { padding: 13px 12px; }
+    .mc-notices { right: 16px; bottom: 16px; }
+}
+@media (max-width: 480px) {
+    .account-header { padding: 22px 20px 18px; }
+    .account-form { padding: 22px 20px; }
+    .account-header h2 { font-size: 21px; }
+    .account-actions { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+
+/* ============================================================
+   MONEY CLICKER / PERMANENT UPGRADE SIDEBAR
+   Requires a non-modal #upgrade-store.money-sidebar dialog and
+   .mc-shop-item wrappers (see controller integration instructions)
+   ============================================================ */
+
+:root { --mc-sidebar-width: clamp(345px, 34vw, 446px); }
+
+/* Side-by-side game and shop on desktops */
+@media (min-width: 851px) {
+    body:has(#upgrade-store.money-sidebar[open]) #app {
+        box-sizing: border-box;
+        width: calc(100% - var(--mc-sidebar-width) - 84px);
+        max-width: 890px;
+        min-height: calc(100dvh - 56px);
+        margin: 28px 0 28px max(28px, calc((100vw - 1430px) / 2));
+        padding: clamp(26px, 3vw, 46px);
+        justify-content: flex-start;
+    }
+
+    body:has(#upgrade-store.money-sidebar[open]) #app #clicker {
+        gap: 30px;
+        padding-top: 16px;
+    }
+
+    /* The shop is always visible, so this old popup button isn't needed */
+    body:has(#upgrade-store.money-sidebar[open]) #purchase-upgrades {
+        display: none;
+    }
+}
+
+/* Keep the shop outside the dialog top layer so the bill remains clickable */
+#upgrade-store.money-sidebar {
+    box-sizing: border-box;
+    position: fixed !important;
+    inset: 28px max(24px, calc((100vw - 1515px) / 2)) 28px auto !important;
+    margin: 0;
+    width: var(--mc-sidebar-width);
+    min-width: 0;
+    max-width: none;
+    max-height: calc(100dvh - 56px);
+    padding: 25px 18px 22px;
+    display: block;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    border: 1px solid #e5e9e3;
+    border-radius: 23px;
+    background: #fff;
+    color: #181c19;
+    box-shadow: 0 18px 55px rgba(20, 35, 23, .065);
+    z-index: 12;
+}
+#upgrade-store.money-sidebar:not([open]) { display: none; }
+#upgrade-store.money-sidebar::backdrop { display: none; }
+#upgrade-store.money-sidebar h2 {
+    font-size: clamp(26px, 2.8vw, 32px);
+    margin: 4px 10px 7px;
+    font-weight: 760;
+    letter-spacing: -.045em;
+}
+#upgrade-store.money-sidebar h2::before {
+    content: 'MAKE IT GROW';
+    color: #65836d;
+    margin-bottom: 7px;
+}
+#upgrade-store.money-sidebar > p {
+    margin: 0 10px 20px;
+    font-size: 13px;
+    color: #757f76;
+}
+#upgrade-store.money-sidebar h3 {
+    margin: 20px 10px 10px;
+    color: #232b25;
+    font-size: 12px;
+    font-weight: 760;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+#upgrade-store.money-sidebar hr {
+    margin: 20px 6px;
+    border-color: #e9ede7;
+}
+
+/* Each existing purchase row becomes a neat shop card */
+#upgrade-store.money-sidebar .mc-shop-item {
+    display: grid !important;
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 11px;
+    row-gap: 3px;
+    position: relative;
+    min-height: 90px;
+    padding: 13px 12px !important;
+    margin: 9px 0 !important;
+    border: 1px solid #e9ede8;
+    border-radius: 16px;
+    background: #fbfcfa;
+    color: #202820;
+    box-shadow: none;
+    transition: background .15s ease, border-color .15s ease;
+}
+#upgrade-store.money-sidebar .mc-shop-item:hover {
+    background: #f5f8f4;
+    border-color: #cddbd0;
+    box-shadow: none;
+}
+#upgrade-store.money-sidebar .mc-shop-item::before {
+    content: '';
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    align-self: center;
+    display: block;
+    width: 54px;
+    height: 54px;
+    border-radius: 13px;
+    background: #e8efe9 center / cover no-repeat;
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%2211%22%20y%3D%2222%22%20width%3D%2242%22%20height%3D%2230%22%20rx%3D%225%22%2F%3E%3Cpath%20d%3D%22M23%2022v-7c0-3%202-5%205-5h8c3%200%205%202%205%205v7M11%2034c13%209%2029%209%2042%200M28%2037h8%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+#upgrade-store.money-sidebar .mc-shop-item > :not(button) {
+    grid-column: 2;
+    min-width: 0;
+    margin: 0;
+}
+#upgrade-store.money-sidebar .mc-shop-item > :is(h3,h4,strong,.mc-shop-item-name) {
+    font-size: 14px;
+    font-weight: 720;
+    letter-spacing: -.012em;
+    text-transform: none;
+    color: #1c261e;
+}
+#upgrade-store.money-sidebar .mc-shop-item > :is(span,p,small,div) {
+    font-size: 12px;
+    line-height: 1.4;
+    color: #657068;
+}
+#upgrade-store.money-sidebar .mc-shop-item > button[id^="purchase-"] {
+    grid-column: 3;
+    grid-row: 1 / span 4;
+    align-self: center;
+    justify-self: end;
+    min-width: 66px;
+    min-height: 38px;
+    margin: 0;
+    padding: 9px 12px;
+    border: 1px solid #161c17;
+    border-radius: 10px;
+    background: #161c17;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 720;
+    white-space: nowrap;
+    box-shadow: none;
+}
+#upgrade-store.money-sidebar .mc-shop-item > button[id^="purchase-"]:hover {
+    border-color: #050806;
+    background: #050806;
+    box-shadow: 0 5px 13px rgba(16, 24, 17, .13);
+}
+#upgrade-store.money-sidebar .mc-shop-item > button[id^="purchase-"]:disabled {
+    background: #e7ebe6;
+    color: #7b867d;
+    border-color: #e7ebe6;
+}
+#upgrade-store.money-sidebar #close-store { display: none; }
+#upgrade-store.money-sidebar .account-error,
+#upgrade-store.money-sidebar .warning-message,
+#upgrade-store.money-sidebar .error-message {
+    margin: 12px 4px;
+    border-radius: 12px;
+}
+
+/* On smaller screens the store appears below the main game */
+@media (max-width: 850px) {
+    body:has(#upgrade-store.money-sidebar[open]) #app {
+        box-sizing: border-box;
+        width: min(760px, calc(100% - 30px));
+        max-width: none;
+        margin: 24px auto 16px;
+    }
+    #upgrade-store.money-sidebar {
+        position: static !important;
+        inset: auto !important;
+        width: min(760px, calc(100% - 30px));
+        max-height: none;
+        margin: 0 auto 24px;
+        padding: 22px 16px;
+        overflow: visible;
+        border-radius: 21px;
+    }
+    body:has(#upgrade-store.money-sidebar[open]) #purchase-upgrades { display: none; }
+}
+@media (max-width: 480px) {
+    #upgrade-store.money-sidebar .mc-shop-item {
+        grid-template-columns: 46px minmax(0, 1fr) auto;
+        column-gap: 9px;
+        padding: 11px 9px !important;
+    }
+    #upgrade-store.money-sidebar .mc-shop-item::before { width: 46px; height: 46px; }
+    #upgrade-store.money-sidebar .mc-shop-item > button[id^="purchase-"] {
+        padding: 8px 9px;
+        min-width: 55px;
+    }
+}
+
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="advisor"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%2211%22%20y%3D%2222%22%20width%3D%2242%22%20height%3D%2230%22%20rx%3D%225%22%2F%3E%3Cpath%20d%3D%22M23%2022v-7c0-3%202-5%205-5h8c3%200%205%202%205%205v7M11%2034c13%209%2029%209%2042%200M28%2037h8%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="employer"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%2215%22%20y%3D%2214%22%20width%3D%2234%22%20height%3D%2239%22%20rx%3D%223%22%2F%3E%3Cpath%20d%3D%22M15%2025h34M23%2020h5M36%2020h5M24%2033h5M35%2033h5M24%2041h5M35%2041h5M28%2053V45h8v8%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="freelance"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%2212%22%20y%3D%2214%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%223%22%2F%3E%3Cpath%20d%3D%22M7%2050h50l-5-6H12zM22%2027l-5%205%205%204M42%2027l5%205-5%204M36%2024l-8%2016%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="side-business"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M16%2027l4-14h24l4%2014M15%2027h34v26H15zM10%2027h44M25%2053V39h14v14M17%2027v5c0%207%2010%207%2010%200v-5M27%2027v5c0%207%2010%207%2010%200v-5M37%2027v5c0%207%2010%207%2010%200v-5%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="investment-portfolio"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M11%2052V13M11%2052h45M18%2042l9-11%208%205%2012-18M41%2018h6v7%22%2F%3E%3Crect%20x%3D%2218%22%20y%3D%2243%22%20width%3D%226%22%20height%3D%229%22%20rx%3D%221%22%2F%3E%3Crect%20x%3D%2230%22%20y%3D%2238%22%20width%3D%226%22%20height%3D%2214%22%20rx%3D%221%22%2F%3E%3Crect%20x%3D%2242%22%20y%3D%2232%22%20width%3D%226%22%20height%3D%2220%22%20rx%3D%221%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="property-empire"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2053V26l19-11%2019%2011v27M20%2053V34h22v19M27%2034v19M35%2034v19M13%2053h38M18%2021V12h12v4%22%2F%3E%3Cpath%20d%3D%22M20%2041h22M20%2047h22%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="tech-startup"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M22%2042l-5%208-1-12%206-5M42%2042l5%208%201-12-6-5M25%2038c0-13%204-22%207-27%203%205%207%2014%207%2027l-7%208zM27%2023h10M32%2031v5M32%2047v8%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2222%22%20r%3D%222%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="mint"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2231%22%20cy%3D%2229%22%20r%3D%2217%22%2F%3E%3Ccircle%20cx%3D%2231%22%20cy%3D%2229%22%20r%3D%2212%22%2F%3E%3Cpath%20d%3D%22M36%2022h-7c-7%200-7%207%200%207h6c7%200%207%207-1%207h-7M32%2018v22M11%2050h43M16%2056h33%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="banker"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M8%2025l24-13%2024%2013zM12%2029h40M12%2050h40M9%2055h46M18%2029v21M28%2029v21M38%2029v21M48%2029v21%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="atm"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%2214%22%20y%3D%229%22%20width%3D%2236%22%20height%3D%2247%22%20rx%3D%225%22%2F%3E%3Crect%20x%3D%2221%22%20y%3D%2217%22%20width%3D%2222%22%20height%3D%2214%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M21%2038h22M25%2043h14M29%2049h6M20%2010v-5h24v5%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="investment-firm"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%2210%22%20y%3D%2214%22%20width%3D%2244%22%20height%3D%2238%22%20rx%3D%223%22%2F%3E%3Cpath%20d%3D%22M17%2043l8-9%208%204%2012-17M40%2021h5v5M16%2052v6M48%2052v6M10%2052h44%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="tech-company"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%2210%22%20y%3D%2212%22%20width%3D%2244%22%20height%3D%2234%22%20rx%3D%224%22%2F%3E%3Cpath%20d%3D%22M25%2053h14M32%2046v7M18%2028h9l5-7%205%2012h9M17%2037h30%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="bank-headquarters"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M15%2055V18l17-8%2017%208v37M11%2055h42M22%2023h6M36%2023h6M22%2032h6M36%2032h6M22%2041h6M36%2041h6M28%2055v-8h8v8%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
+#upgrade-store.money-sidebar .mc-shop-item[data-upgrade="global-corporation"]::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22%23e8efe9%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23294b3b%22%20stroke-width%3D%222.35%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2222%22%2F%3E%3Cpath%20d%3D%22M10%2032h44M32%2010v44M18%2018c8%206%2020%206%2028%200M18%2046c8-6%2020-6%2028%200M32%2010c-12%208-12%2036%200%2044M32%2010c12%208%2012%2036%200%2044%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }

@@ -1,14 +1,13 @@
 import MoneyView from "../view/money-view.ts";
 import CreateUpgradeView from "../view/create-upgrade-view.ts";
 import CreateAccountView from "../view/create-account-view.ts";
-import {UpgradeType} from "../model/UpgradeType.ts";
+import { UpgradeType } from "../model/UpgradeType.ts";
 import Account from "../model/Account/account.ts";
 import PlayerPersistence from "../model/player-persistence.ts";
 import DuplicateUserNameError from "../model/ErrorMethods/DuplicateUserNameError.ts";
 import NoAccountFoundError from "../model/ErrorMethods/NoAccountFoundError.ts";
 import InsufficientBuyPowerError from "../model/ErrorMethods/InsufficientBPError.ts";
 import RoboBuy from "../model/RoboBuy";
-
 
 export default class MoneyController {
     #account?: Account;
@@ -17,6 +16,14 @@ export default class MoneyController {
     #createUpgradeView?: CreateUpgradeView;
     #moneyView?: MoneyView;
 
+    // Tracks money earned by clicks and buildings
+    #lastBalance = 0;
+    #isClicking = false;
+    #incomeCheckInterval?: number;
+    #autoSaveInterval?: number;
+    #passiveFloaterTimer?: number;
+    #pendingPassiveIncome = 0;
+    #floaterCount = 0;
 
     constructor() {
         this.#createAccountView = new CreateAccountView(this);
@@ -24,44 +31,28 @@ export default class MoneyController {
         this.#roboBuy = new RoboBuy();
     }
 
-    /**
-     * Creates a new account using the entered information
-     *
-     * @param username The username entered by the user
-     * @param password The password entered by the user
-     * Side effects: Saves a new account and opens the main game view
-     */
-    async createAccount(
-        username: string,
-        password: string
-    ): Promise<void> {
+    /** Creates an account and opens the main game */
+    public async createAccount(username: string, password: string): Promise<void> {
         try {
-            // Account creation also creates and loads the player's information
             this.#account = await Account.createAccount(username, password);
-            this.#createAccountView?.close(); // Closes since account view is no longer needed after account creation
+            this.#createAccountView?.close();
 
-            // Open the game using the new player's info
             this.#moneyView = new MoneyView(this.#account.player, this);
+            this.updateMoneyBill();
+            this.showCreateUpgradeView();
+            this.#watchMoneyChanges();
             this.#startAutoSave(this.#account);
-
         } catch (error) {
             if (error instanceof DuplicateUserNameError) {
                 this.#createAccountView?.showDuplicateError();
+            } else {
+                throw error;
             }
         }
     }
 
-    /**
-     * Attempts to log in using the entered information
-     *
-     * @param username The username entered by the user
-     * @param password The password entered by the user
-     * Side effects: May close the account view and open the main game view
-     */
-    async login(
-        username: string,
-        password: string
-    ): Promise<void> {
+    /** Logs in and restores the saved game */
+    public async login(username: string, password: string): Promise<void> {
         const account = await Account.login(username, password);
 
         if (account === null) {
@@ -69,127 +60,126 @@ export default class MoneyController {
             return;
         }
 
-        this.#account = account; // Keep the successfully loaded account in the controller
+        this.#account = account;
         this.#createAccountView?.close();
 
-        // Opens the game using the player's saved information
-        this.#moneyView = new MoneyView(this.#account.player, this);
-        this.#startAutoSave(this.#account);
+        this.#moneyView = new MoneyView(account.player, this);
+        this.updateMoneyBill();
+        this.showCreateUpgradeView();
+        this.#watchMoneyChanges();
+        this.#startAutoSave(account);
     }
 
-
-    /**
-     * Handles a click made by the player
-     *
-     * Side effects: Increases buy power, updates the view and saves the player
-     */
+    /** Adds earnings from clicking the banknote */
     public async handleClick(): Promise<void> {
-        if (this.#account !== undefined) {
-            try {
-                const player = this.#account.player;
-                player.click(); // Updates the player in memory first
-                this.#roboBuy.run(this.#account.player);
-                const persistence = new PlayerPersistence(player);
-                await persistence.savePlayer(); // Saves the new buy power after the click
+        if (this.#account === undefined) return;
 
-            } catch (error) {
-                // Let the user know their latest progress was not saved due to an error
-                this.#moneyView?.displayProgressNotSaved();
+        const player = this.#account.player;
+
+        try {
+            const balanceBefore = player.buyPower;
+
+            // Suppress the passive-income floater for this manual click
+            this.#isClicking = true;
+            try {
+                player.click();
+            } finally {
+                this.#isClicking = false;
             }
+
+            const earned = player.buyPower - balanceBefore;
+            this.#lastBalance = player.buyPower;
+
+            // Show the real amount earned, even after click upgrades
+            if (earned > 0) {
+                this.#showMoneyFloater(earned, "click");
+            }
+
+            this.#runRoboBuy(player);
+            this.#checkMoneyChanges(player);
+            this.updateMoneyBill();
+
+            const persistence = new PlayerPersistence(player);
+            await persistence.savePlayer();
+        } catch (error) {
+            this.#moneyView?.displayProgressNotSaved();
         }
     }
 
-    /**
-     * Handles showing the upgrade store.
-     */
-    showCreateUpgradeView(): void {
-        if (!this.#account) {
-            return;
-        }
+    /** Shows the permanent Upgrade Store sidebar */
+    public showCreateUpgradeView(): void {
+        if (!this.#account) return;
 
         if (!this.#createUpgradeView) {
             this.#createUpgradeView = new CreateUpgradeView(this.#account.player, this);
         }
-
         this.#createUpgradeView.show();
     }
-    /**
-     * Attempts to purchase and save a regular upgrade
-     *
-     * @param upgradeName The type of upgrade being purchased
-     * Side effects: May change and save the player's money and upgrade
-     */
 
+    /** Purchases a click upgrade */
     public async purchaseUpgrade(upgradeName: UpgradeType): Promise<void> {
-        if (this.#account !== undefined) {
-            try {
-                const player = this.#account.player;
+        if (this.#account === undefined) return;
 
-                // This throws an error when the player cannot afford the upgrade
-                const purchasedUpgrade = player.purchaseByName(upgradeName);
+        try {
+            const player = this.#account.player;
+            const purchasedUpgrade = player.purchaseByName(upgradeName);
 
-                if (purchasedUpgrade !== null) {
-                    this.#roboBuy.setState(upgradeName); // **
-                    const persistence = new PlayerPersistence(player);
+            this.#checkMoneyChanges(player);
+            this.updateMoneyBill();
 
-                    // Save the money spent on the upgrade
-                    const playerId = await persistence.savePlayer();
-
-                    // Save the new upgrade information
-                    await persistence.saveUpgrade(purchasedUpgrade, playerId);
-                }
-            } catch (error) {
-                if (error instanceof InsufficientBuyPowerError) {
-                    // Tell the upgrade view to show the error
-                    this.#createUpgradeView?.showInsufficientBuyPowerError();
-                } else {
-                    throw error;
-                }
+            if (purchasedUpgrade !== null) {
+                this.#roboBuy.setState(upgradeName);
+                const persistence = new PlayerPersistence(player);
+                const playerId = await persistence.savePlayer();
+                await persistence.saveUpgrade(purchasedUpgrade, playerId);
+            }
+        } catch (error) {
+            if (error instanceof InsufficientBuyPowerError) {
+                this.#createUpgradeView?.showInsufficientBuyPowerError();
+            } else {
+                throw error;
             }
         }
     }
 
-    /**
-     * Attempts to purchase and save a building
-     *
-     * @param type The type of building being purchased
-     * @throws NoAccountFoundError When no account is logged in
-     * Side effects: May change and save the player's money and building
-     */
+    /** Purchases an auto-clicking building */
     public async purchaseBuilding(type: UpgradeType): Promise<void> {
-        if (this.#account === undefined) {throw new NoAccountFoundError();}
-        else {
-            try {
-                const player = this.#account.player;
+        if (this.#account === undefined) {
+            throw new NoAccountFoundError();
+        }
 
-                // The player throws an error when they cannot afford the building
-                const building = player.purchaseBuilding(type);
+        try {
+            const player = this.#account.player;
+            const building = player.purchaseBuilding(type);
+            this.#checkMoneyChanges(player);
 
-                if (building !== null) {
-                    this.#roboBuy.setState(type);
-                    const persistence = new PlayerPersistence(player);
-
-                    // Save the money spent and get the player's database ID
-                    const playerId = await persistence.savePlayer();
-
-                    // Save the level, cost, production and interval speed
-                    await persistence.saveBuilding(building, playerId);
-                }
-            } catch (error) {
-                if (error instanceof InsufficientBuyPowerError) {
-                    // Tell the upgrade view to show the error
-                    this.#createUpgradeView?.showInsufficientBuyPowerError();
-                } else {
-                    throw error;
-                }
+            if (building !== null) {
+                this.#roboBuy.setState(type);
+                const persistence = new PlayerPersistence(player);
+                const playerId = await persistence.savePlayer();
+                await persistence.saveBuilding(building, playerId);
+            }
+        } catch (error) {
+            if (error instanceof InsufficientBuyPowerError) {
+                this.#createUpgradeView?.showInsufficientBuyPowerError();
+            } else {
+                throw error;
             }
         }
     }
-    //Saves every 1 second
+
+    /** Saves the player's progress every second */
     #startAutoSave(account: Account): void {
-       window.setInterval(async () => {
-           this.#roboBuy.run(account.player); // RoboBuy will run here to check if it can purchase anything
-           const persistence = new PlayerPersistence(account.player);
+        if (this.#autoSaveInterval !== undefined) {
+            window.clearInterval(this.#autoSaveInterval);
+        }
+
+        this.#autoSaveInterval = window.setInterval(async () => {
+            this.#runRoboBuy(account.player);
+            this.#checkMoneyChanges(account.player);
+            this.updateMoneyBill();
+
+            const persistence = new PlayerPersistence(account.player);
             await persistence.savePlayer();
         }, 1000);
     }
@@ -198,10 +188,146 @@ export default class MoneyController {
         this.#roboBuy.toggle();
 
         if (this.#roboBuy.isOn && this.#account !== undefined) {
-            this.#roboBuy.run(this.#account.player);
+            this.#runRoboBuy(this.#account.player);
+            this.#checkMoneyChanges(this.#account.player);
+            this.updateMoneyBill();
         }
 
         return this.#roboBuy.isOn;
     }
 
+    /**
+     * Runs RoboBuy and announces only purchases that actually changed a level
+     * A balance drop alone is not enough to identify what was purchased
+     */
+    #runRoboBuy(player: Account["player"]): void {
+        const types: UpgradeType[] = [
+            UpgradeType.FinancialAdvisor,
+            UpgradeType.Employer,
+            UpgradeType.FreelanceContract,
+            UpgradeType.SideBusiness,
+            UpgradeType.InvestmentPortfolio,
+            UpgradeType.PropertyEmpire,
+            UpgradeType.TechStartup,
+            UpgradeType.RoyalMint,
+            UpgradeType.Banker,
+            UpgradeType.ATMNetwork,
+            UpgradeType.InvestmentFirm,
+            UpgradeType.TechCompany,
+            UpgradeType.BankHeadquarters,
+            UpgradeType.GlobalCorporation
+        ];
+
+        // Snapshot levels just before RoboBuy changes the Player
+        const before = types.map(type => player.findUpgradeLevel(type));
+        this.#roboBuy.run(player);
+
+        // Only RoboBuy purchases appear here, not manual purchases
+        for (let i = 0; i < types.length; i++) {
+            const bought = player.findUpgradeLevel(types[i]) - before[i];
+            if (bought > 0) {
+                this.#createUpgradeView?.showRoboBuyPurchase(types[i], bought);
+            }
+        }
+    }
+
+    private updateMoneyBill(): void {
+        if (this.#account === undefined) return;
+
+        const amount = this.#account.player.currClick;
+        const button = document.querySelector<HTMLButtonElement>("#click-button");
+
+        if (button !== null) {
+            button.dataset.perClick = new Intl.NumberFormat("en-CA", {
+                notation: "compact",
+                maximumFractionDigits: 1
+            }).format(amount);
+
+            button.setAttribute("aria-label", `Click to earn ${amount} money`);
+        }
+    }
+
+    /** Watches both manual and automatic changes in the player's balance */
+    #watchMoneyChanges(): void {
+        const player = this.#account?.player;
+        if (player === undefined) return;
+
+        // Stop watchers from a previous login
+        if (this.#incomeCheckInterval !== undefined) {
+            window.clearInterval(this.#incomeCheckInterval);
+        }
+        if (this.#passiveFloaterTimer !== undefined) {
+            window.clearTimeout(this.#passiveFloaterTimer);
+            this.#passiveFloaterTimer = undefined;
+        }
+
+        this.#pendingPassiveIncome = 0;
+        this.#lastBalance = player.buyPower;
+
+        // Immediate updates when the Player notifies its listeners
+        player.registerListener({
+            notify: () => {
+                if (this.#account?.player === player) {
+                    this.#checkMoneyChanges(player);
+                }
+            }
+        });
+
+        // Fallback for building timers that modify buyPower without notifying
+        this.#incomeCheckInterval = window.setInterval(() => {
+            if (this.#account?.player === player) {
+                this.#checkMoneyChanges(player);
+            }
+        }, 200);
+    }
+
+    /** Detects positive balance changes not caused by a manual click */
+    #checkMoneyChanges(player: Account["player"]): void {
+        const currentBalance = player.buyPower;
+        const earned = currentBalance - this.#lastBalance;
+        this.#lastBalance = currentBalance;
+
+        if (!this.#isClicking && earned > 0) {
+            this.#pendingPassiveIncome += earned;
+
+            // Combine frequent building payouts into one gentle floater
+            if (this.#passiveFloaterTimer === undefined) {
+                this.#passiveFloaterTimer = window.setTimeout(() => {
+                    const total = this.#pendingPassiveIncome;
+                    this.#pendingPassiveIncome = 0;
+                    this.#passiveFloaterTimer = undefined;
+                    this.#showMoneyFloater(total, "building");
+                }, 450);
+            }
+        }
+    }
+
+    /** Displays a floating amount above the money bill */
+    #showMoneyFloater(amount: number, kind: "click" | "building"): void {
+        if (!Number.isFinite(amount) || amount <= 0) return;
+
+        const button = document.querySelector<HTMLButtonElement>("#click-button");
+        const clicker = document.querySelector<HTMLElement>("#clicker");
+        if (button === null || clicker === null) return;
+
+        const floater = document.createElement("span");
+        floater.className = `mc-earning-floater mc-earning-floater--${kind}`;
+        floater.textContent = `+$${new Intl.NumberFormat("en-CA", {
+            notation: "compact",
+            maximumFractionDigits: 1
+        }).format(amount)}`;
+        floater.setAttribute("aria-hidden", "true");
+
+        const billRect = button.getBoundingClientRect();
+        const clickerRect = clicker.getBoundingClientRect();
+        const x = billRect.left - clickerRect.left + billRect.width * (kind === "click" ? 0.5 : 0.7);
+        const y = billRect.top - clickerRect.top + billRect.height * (kind === "click" ? 0.38 : 0.25);
+
+        floater.style.left = `${x}px`;
+        floater.style.top = `${y}px`;
+        floater.style.setProperty("--mc-drift", `${(this.#floaterCount++ % 5 - 2) * 22}px`);
+
+        clicker.appendChild(floater);
+        window.setTimeout(() => floater.remove(), 1400);
+    }
 }
