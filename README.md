@@ -5,6 +5,7 @@ date: Summer 2026
 ---
 # Overview
 - This is a money clicker game built for a second year course COMP-2452 at University of Manitoba
+- Please ignore the 15 branches I have on this repository. I know know how to merge branches to main but I am keeping those branches because it's nothing to be ashamed of :)
 
 # Phase 3 Implementation Notes
 ---
