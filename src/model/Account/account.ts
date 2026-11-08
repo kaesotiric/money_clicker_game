@@ -1,3 +1,4 @@
+
 import Player from "../player.ts";
 import PlayerPersistence from "../player-persistence.ts";
 import db from "../connection.ts";
@@ -8,15 +9,12 @@ import NoPlayerFoundError from "../ErrorMethods/NoPlayerFoundError.ts";
 /**
  * Represents a user's account and manages account creation and login
  */
-
 export default class Account {
     #username: string;
-    #password: string;
     #player: Player;
 
-    constructor(username: string, password: string) {
+    constructor(username: string) {
         this.#username = username;
-        this.#password = password;
 
         this.#player = new Player(username);
         this.#player.account = this;
@@ -46,7 +44,7 @@ export default class Account {
             `
                 INSERT INTO account (username, password)
                 VALUES ($1, $2)
-                ON CONFLICT (username) DO NOTHING
+                    ON CONFLICT (username) DO NOTHING
                 RETURNING username;
             `,
             [username, hashedPass]
@@ -57,7 +55,7 @@ export default class Account {
         }
 
         // Creates the Player object in memory
-        const account = new Account(username, hashedPass);
+        const account = new Account(username);
 
         // Insert the player and return its generated ID by the db
         const playerResult = await db().query<{
@@ -69,7 +67,7 @@ export default class Account {
                     account
                 )
                 VALUES ($1, $2)
-                RETURNING id;
+                    RETURNING id;
             `,
             [username, username]
         );
@@ -148,7 +146,7 @@ export default class Account {
 
             // Only load the player when the password is correct
             if (passwordMatches) {
-                const account = new Account(row.username, row.password);
+                const account = new Account(row.username);
 
                 const loadedPlayer =
                     await PlayerPersistence.getPlayerByAccount(row.username);
